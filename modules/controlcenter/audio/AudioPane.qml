@@ -237,6 +237,24 @@ Item {
                             title: qsTr("Audio Settings")
                         }
 
+                        SwitchRow {
+                            label: qsTr("Increase maximum volume")
+                            checked: Config.services.allowVolumeOver100
+                            onToggled: (checked) => {
+                                Config.services.allowVolumeOver100 = checked;
+                                
+                                // Clamp volumes to 100% if toggle is turned off
+                                if (!checked) {
+                                    if (Audio.volume > 1.0) {
+                                        Audio.setVolume(1.0);
+                                    }
+                                    if (Audio.sourceVolume > 1.0) {
+                                        Audio.setSourceVolume(1.0);
+                                    }
+                                }
+                            }
+                        }
+
                         SectionHeader {
                             title: qsTr("Output volume")
                             description: qsTr("Control the volume of your output device")
@@ -266,7 +284,10 @@ Item {
                                     StyledInputField {
                                         id: outputVolumeInput
                                         Layout.preferredWidth: 70
-                                        validator: IntValidator { bottom: 0; top: 100 }
+                                        validator: IntValidator { 
+                                            bottom: 0
+                                            top: Config.services.allowVolumeOver100 ? 150 : 100
+                                        }
                                         enabled: !Audio.muted
                                         
                                         Component.onCompleted: {
@@ -285,7 +306,8 @@ Item {
                                         onTextEdited: (text) => {
                                             if (hasFocus) {
                                                 const val = parseInt(text);
-                                                if (!isNaN(val) && val >= 0 && val <= 100) {
+                                                const maxVal = Config.services.allowVolumeOver100 ? 150 : 100;
+                                                if (!isNaN(val) && val >= 0 && val <= maxVal) {
                                                     Audio.setVolume(val / 100);
                                                 }
                                             }
@@ -293,7 +315,8 @@ Item {
                                         
                                         onEditingFinished: {
                                             const val = parseInt(text);
-                                            if (isNaN(val) || val < 0 || val > 100) {
+                                            const maxVal = Config.services.allowVolumeOver100 ? 150 : 100;
+                                            if (isNaN(val) || val < 0 || val > maxVal) {
                                                 text = Math.round(Audio.volume * 100).toString();
                                             }
                                         }
@@ -336,6 +359,8 @@ Item {
                                     Layout.fillWidth: true
                                     implicitHeight: Appearance.padding.normal * 3
 
+                                    from: 0
+                                    to: Config.services.allowVolumeOver100 ? 1.5 : 1.0
                                     value: Audio.volume
                                     enabled: !Audio.muted
                                     opacity: enabled ? 1 : 0.5
@@ -343,6 +368,13 @@ Item {
                                         Audio.setVolume(value);
                                         if (!outputVolumeInput.hasFocus) {
                                             outputVolumeInput.text = Math.round(value * 100).toString();
+                                        }
+                                    }
+
+                                    Behavior on to {
+                                        NumberAnimation {
+                                            duration: Appearance.anim.durations.normal
+                                            easing.type: Easing.OutCubic
                                         }
                                     }
                                 }
@@ -378,7 +410,10 @@ Item {
                                     StyledInputField {
                                         id: inputVolumeInput
                                         Layout.preferredWidth: 70
-                                        validator: IntValidator { bottom: 0; top: 100 }
+                                        validator: IntValidator { 
+                                            bottom: 0
+                                            top: Config.services.allowVolumeOver100 ? 150 : 100
+                                        }
                                         enabled: !Audio.sourceMuted
                                         
                                         Component.onCompleted: {
@@ -397,7 +432,8 @@ Item {
                                         onTextEdited: (text) => {
                                             if (hasFocus) {
                                                 const val = parseInt(text);
-                                                if (!isNaN(val) && val >= 0 && val <= 100) {
+                                                const maxVal = Config.services.allowVolumeOver100 ? 150 : 100;
+                                                if (!isNaN(val) && val >= 0 && val <= maxVal) {
                                                     Audio.setSourceVolume(val / 100);
                                                 }
                                             }
@@ -405,7 +441,8 @@ Item {
                                         
                                         onEditingFinished: {
                                             const val = parseInt(text);
-                                            if (isNaN(val) || val < 0 || val > 100) {
+                                            const maxVal = Config.services.allowVolumeOver100 ? 150 : 100;
+                                            if (isNaN(val) || val < 0 || val > maxVal) {
                                                 text = Math.round(Audio.sourceVolume * 100).toString();
                                             }
                                         }
@@ -448,6 +485,8 @@ Item {
                                     Layout.fillWidth: true
                                     implicitHeight: Appearance.padding.normal * 3
 
+                                    from: 0
+                                    to: Config.services.allowVolumeOver100 ? 1.5 : 1.0
                                     value: Audio.sourceVolume
                                     enabled: !Audio.sourceMuted
                                     opacity: enabled ? 1 : 0.5
@@ -455,6 +494,13 @@ Item {
                                         Audio.setSourceVolume(value);
                                         if (!inputVolumeInput.hasFocus) {
                                             inputVolumeInput.text = Math.round(value * 100).toString();
+                                        }
+                                    }
+
+                                    Behavior on to {
+                                        NumberAnimation {
+                                            duration: Appearance.anim.durations.normal
+                                            easing.type: Easing.OutCubic
                                         }
                                     }
                                 }

@@ -402,6 +402,7 @@ Singleton {
             visualiserBars: services.visualiserBars,
             audioIncrement: services.audioIncrement,
             maxVolume: services.maxVolume,
+            allowVolumeOver100: services.allowVolumeOver100,
             smartScheme: services.smartScheme,
             defaultPlayer: services.defaultPlayer,
             playerAliases: services.playerAliases

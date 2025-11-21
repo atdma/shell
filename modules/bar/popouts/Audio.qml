@@ -96,11 +96,20 @@ Item {
                 anchors.right: parent.right
                 implicitHeight: parent.implicitHeight
 
+                from: 0
+                to: Config.services.allowVolumeOver100 ? 1.5 : 1.0
                 value: Audio.volume
                 onMoved: Audio.setVolume(value)
 
                 Behavior on value {
                     Anim {}
+                }
+
+                Behavior on to {
+                    NumberAnimation {
+                        duration: Appearance.anim.durations.normal
+                        easing.type: Easing.OutCubic
+                    }
                 }
             }
         }

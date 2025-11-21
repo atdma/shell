@@ -46,7 +46,7 @@ Item {
 
                 icon: Icons.getVolumeIcon(value, root.muted)
                 value: root.volume
-                to: Config.services.maxVolume
+                to: Config.services.allowVolumeOver100 ? 1.5 : 1.0
                 onMoved: Audio.setVolume(value)
             }
         }
@@ -71,7 +71,7 @@ Item {
 
                     icon: Icons.getMicVolumeIcon(value, root.sourceMuted)
                     value: root.sourceVolume
-                    to: Config.services.maxVolume
+                    to: Config.services.allowVolumeOver100 ? 1.5 : 1.0
                     onMoved: Audio.setSourceVolume(value)
                 }
             }
