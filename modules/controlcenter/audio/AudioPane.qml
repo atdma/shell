@@ -378,6 +378,17 @@ Item {
                                         }
                                     }
                                 }
+
+                                VUMeter {
+                                    Layout.fillWidth: true
+                                    Layout.topMargin: Appearance.spacing.smaller
+                                    level: {
+                                        if (!Audio.cava.values || Audio.cava.values.length === 0) return 0;
+                                        const max = Math.max(...Audio.cava.values);
+                                        return Math.max(0, Math.min(1, max));
+                                    }
+                                    opacity: Audio.muted ? 0.3 : 1
+                                }
                             }
                         }
 
@@ -503,6 +514,17 @@ Item {
                                             easing.type: Easing.OutCubic
                                         }
                                     }
+                                }
+
+                                VUMeter {
+                                    Layout.fillWidth: true
+                                    Layout.topMargin: Appearance.spacing.smaller
+                                    level: {
+                                        // Input levels aren't available via cava, so we'll show a minimal indicator
+                                        // when input is active (you could enhance this later with input-specific monitoring)
+                                        return 0;
+                                    }
+                                    opacity: Audio.sourceMuted ? 0.3 : 0.5
                                 }
                             }
                         }
