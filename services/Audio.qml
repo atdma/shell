@@ -14,7 +14,9 @@ Singleton {
     property string previousSourceName: ""
 
     readonly property var nodes: Pipewire.nodes.values.reduce((acc, node) => {
-        if (!node.isStream) {
+        if (node.isStream && node.audio) {
+            acc.streams.push(node);
+        } else if (!node.isStream) {
             if (node.isSink)
                 acc.sinks.push(node);
             else if (node.audio)
@@ -23,11 +25,13 @@ Singleton {
         return acc;
     }, {
         sources: [],
-        sinks: []
+        sinks: [],
+        streams: []
     })
 
     readonly property list<PwNode> sinks: nodes.sinks
     readonly property list<PwNode> sources: nodes.sources
+    readonly property list<PwNode> streams: nodes.streams
 
     readonly property PwNode sink: Pipewire.defaultAudioSink
     readonly property PwNode source: Pipewire.defaultAudioSource
@@ -81,6 +85,20 @@ Singleton {
         Pipewire.preferredDefaultAudioSource = newSource;
     }
 
+    function setStreamVolume(stream: PwNode, newVolume: real): void {
+        if (stream?.ready && stream?.audio) {
+            stream.audio.muted = false;
+            const maxVol = Config.services.allowVolumeOver100 ? 1.5 : 1.0;
+            stream.audio.volume = Math.max(0, Math.min(maxVol, newVolume));
+        }
+    }
+
+    function setStreamMuted(stream: PwNode, muted: bool): void {
+        if (stream?.ready && stream?.audio) {
+            stream.audio.muted = muted;
+        }
+    }
+
     onSinkChanged: {
         if (!sink?.ready)
             return;
@@ -111,7 +129,7 @@ Singleton {
     }
 
     PwObjectTracker {
-        objects: [...root.sinks, ...root.sources]
+        objects: [...root.sinks, ...root.sources, ...root.streams]
     }
 
     CavaProvider {

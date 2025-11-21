@@ -422,11 +422,11 @@ Item {
                                         
                                         Connections {
                                             target: Audio
-                                            function onSourceVolumeChanged() {
-                                                if (!inputVolumeInput.hasFocus) {
-                                                    inputVolumeInput.text = Math.round(Audio.sourceVolume * 100).toString();
+                                                function onSourceVolumeChanged() {
+                                                    if (!inputVolumeInput.hasFocus) {
+                                                        inputVolumeInput.text = Math.round(Audio.sourceVolume * 100).toString();
+                                                    }
                                                 }
-                                            }
                                         }
                                         
                                         onTextEdited: (text) => {
@@ -503,6 +503,160 @@ Item {
                                             easing.type: Easing.OutCubic
                                         }
                                     }
+                                }
+                            }
+                        }
+
+                        SectionHeader {
+                            title: qsTr("Applications")
+                            description: qsTr("Control volume for individual applications")
+                        }
+
+                        SectionContainer {
+                            contentSpacing: Appearance.spacing.normal
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: Appearance.spacing.normal
+
+                                Repeater {
+                                    model: Audio.streams
+
+                                    delegate: ColumnLayout {
+                                        required property var modelData
+                                        required property int index
+
+                                        Layout.fillWidth: true
+                                        spacing: Appearance.spacing.small
+
+                                        RowLayout {
+                                            Layout.fillWidth: true
+                                            spacing: Appearance.spacing.normal
+
+                                            StyledText {
+                                                Layout.fillWidth: true
+                                                text: {
+                                                    if (modelData.description) return modelData.description;
+                                                    if (modelData.name) return modelData.name;
+                                                    return qsTr("Unknown Application");
+                                                }
+                                                font.pointSize: Appearance.font.size.normal
+                                                font.weight: 500
+                                                elide: Text.ElideRight
+                                            }
+
+                                            StyledInputField {
+                                                id: streamVolumeInput
+                                                Layout.preferredWidth: 70
+                                                validator: IntValidator { 
+                                                    bottom: 0
+                                                    top: Config.services.allowVolumeOver100 ? 150 : 100
+                                                }
+                                                enabled: modelData.ready && modelData.audio && !modelData.audio.muted
+                                                
+                                                property real streamVolume: modelData.ready && modelData.audio ? (modelData.audio.volume ?? 0) : 0
+                                                
+                                                Component.onCompleted: {
+                                                    text = Math.round(streamVolume * 100).toString();
+                                                }
+                                                
+                                                onStreamVolumeChanged: {
+                                                    if (!hasFocus) {
+                                                        text = Math.round(streamVolume * 100).toString();
+                                                    }
+                                                }
+                                                
+                                                onTextEdited: (text) => {
+                                                    if (hasFocus && modelData.ready && modelData.audio) {
+                                                        const val = parseInt(text);
+                                                        const maxVal = Config.services.allowVolumeOver100 ? 150 : 100;
+                                                        if (!isNaN(val) && val >= 0 && val <= maxVal) {
+                                                            Audio.setStreamVolume(modelData, val / 100);
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                onEditingFinished: {
+                                                    if (modelData.ready && modelData.audio) {
+                                                        const val = parseInt(text);
+                                                        const maxVal = Config.services.allowVolumeOver100 ? 150 : 100;
+                                                        if (isNaN(val) || val < 0 || val > maxVal) {
+                                                            text = Math.round(streamVolume * 100).toString();
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            StyledText {
+                                                text: "%"
+                                                color: Colours.palette.m3outline
+                                                font.pointSize: Appearance.font.size.normal
+                                                opacity: (modelData.ready && modelData.audio && modelData.audio.muted) ? 0.5 : 1
+                                            }
+
+                                            StyledRect {
+                                                implicitWidth: implicitHeight
+                                                implicitHeight: streamMuteIcon.implicitHeight + Appearance.padding.normal * 2
+
+                                                radius: Appearance.rounding.normal
+                                                property bool isMuted: modelData.ready && modelData.audio && modelData.audio.muted
+                                                color: isMuted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+
+                                                StateLayer {
+                                                    function onClicked(): void {
+                                                        if (modelData.ready && modelData.audio) {
+                                                            Audio.setStreamMuted(modelData, !modelData.audio.muted);
+                                                        }
+                                                    }
+                                                }
+
+                                                MaterialIcon {
+                                                    id: streamMuteIcon
+
+                                                    anchors.centerIn: parent
+                                                    text: parent.isMuted ? "volume_off" : "volume_up"
+                                                    color: parent.isMuted ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                                                }
+                                            }
+                                        }
+
+                                        StyledSlider {
+                                            id: streamVolumeSlider
+                                            Layout.fillWidth: true
+                                            implicitHeight: Appearance.padding.normal * 3
+
+                                            from: 0
+                                            to: Config.services.allowVolumeOver100 ? 1.5 : 1.0
+                                            value: modelData.ready && modelData.audio ? (modelData.audio.volume ?? 0) : 0
+                                            enabled: modelData.ready && modelData.audio && !modelData.audio.muted
+                                            opacity: enabled ? 1 : 0.5
+                                            
+                                            onMoved: {
+                                                if (modelData.ready && modelData.audio) {
+                                                    Audio.setStreamVolume(modelData, value);
+                                                    if (!streamVolumeInput.hasFocus) {
+                                                        streamVolumeInput.text = Math.round(value * 100).toString();
+                                                    }
+                                                }
+                                            }
+
+                                            Behavior on to {
+                                                NumberAnimation {
+                                                    duration: Appearance.anim.durations.normal
+                                                    easing.type: Easing.OutCubic
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                StyledText {
+                                    visible: Audio.streams.length === 0
+                                    Layout.fillWidth: true
+                                    text: qsTr("No applications are currently playing audio")
+                                    color: Colours.palette.m3outline
+                                    font.pointSize: Appearance.font.size.normal
+                                    horizontalAlignment: Text.AlignHCenter
                                 }
                             }
                         }
