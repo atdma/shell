@@ -364,6 +364,12 @@ Item {
                                     value: Audio.volume
                                     enabled: !Audio.muted
                                     opacity: enabled ? 1 : 0.5
+                                    showVU: !Audio.muted
+                                    vuLevel: {
+                                        if (!Audio.cava.values || Audio.cava.values.length === 0) return 0;
+                                        const max = Math.max(...Audio.cava.values);
+                                        return Math.max(0, Math.min(1, max));
+                                    }
                                     onMoved: {
                                         Audio.setVolume(value);
                                         if (!outputVolumeInput.hasFocus) {
@@ -377,17 +383,6 @@ Item {
                                             easing.type: Easing.OutCubic
                                         }
                                     }
-                                }
-
-                                VUMeter {
-                                    Layout.fillWidth: true
-                                    Layout.topMargin: Appearance.spacing.smaller
-                                    level: {
-                                        if (!Audio.cava.values || Audio.cava.values.length === 0) return 0;
-                                        const max = Math.max(...Audio.cava.values);
-                                        return Math.max(0, Math.min(1, max));
-                                    }
-                                    opacity: Audio.muted ? 0.3 : 1
                                 }
                             }
                         }
@@ -501,6 +496,12 @@ Item {
                                     value: Audio.sourceVolume
                                     enabled: !Audio.sourceMuted
                                     opacity: enabled ? 1 : 0.5
+                                    showVU: !Audio.sourceMuted
+                                    vuLevel: {
+                                        // Input levels aren't available via cava, so we'll show a minimal indicator
+                                        // when input is active (you could enhance this later with input-specific monitoring)
+                                        return 0;
+                                    }
                                     onMoved: {
                                         Audio.setSourceVolume(value);
                                         if (!inputVolumeInput.hasFocus) {
@@ -514,17 +515,6 @@ Item {
                                             easing.type: Easing.OutCubic
                                         }
                                     }
-                                }
-
-                                VUMeter {
-                                    Layout.fillWidth: true
-                                    Layout.topMargin: Appearance.spacing.smaller
-                                    level: {
-                                        // Input levels aren't available via cava, so we'll show a minimal indicator
-                                        // when input is active (you could enhance this later with input-specific monitoring)
-                                        return 0;
-                                    }
-                                    opacity: Audio.sourceMuted ? 0.3 : 0.5
                                 }
                             }
                         }
