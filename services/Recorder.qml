@@ -25,7 +25,7 @@ Singleton {
         // Build command array
         const args = ["caelestia", "record", "--mode", videoMode];
 
-        if (audioMode && audioMode !== "none") {
+        if (audioMode) {
             args.push("--audio", audioMode);
         }
 
