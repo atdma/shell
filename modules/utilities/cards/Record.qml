@@ -21,8 +21,17 @@ StyledRect {
 
     property bool actuallyRecording: Recorder.running
     property string lastError: ""
-    property string currentVideoMode: "fullscreen"
-    property string currentAudioMode: "none"
+    property string currentVideoMode: Config.utilities.recording.videoMode
+
+    // Computed audio mode based on settings
+    readonly property string currentAudioMode: {
+        const recordSystem = Config.utilities.recording.recordSystem;
+        const recordMic = Config.utilities.recording.recordMicrophone;
+        if (recordSystem && recordMic) return "combined";
+        if (recordSystem) return "system";
+        if (recordMic) return "mic";
+        return "none";
+    }
 
     ColumnLayout {
         id: layout
@@ -88,18 +97,16 @@ StyledRect {
 
             SplitButton {
                 disabled: root.actuallyRecording
-                active: menuItems.find(m => root.props.recordingMode === m.mode) ?? menuItems[0]
+                active: menuItems.find(m => m.mode === Config.utilities.recording.videoMode) ?? menuItems[0]
                 menu.onItemSelected: item => {
-                    root.props.recordingMode = item.mode;
-                    root.currentVideoMode = item.videoMode;
-                    root.currentAudioMode = item.audioMode;
+                    Config.utilities.recording.videoMode = item.mode;
+                    root.currentVideoMode = item.mode;
+                    Config.save();
                 }
 
                 menuItems: [
                     MenuItem {
                         property string mode: "fullscreen"
-                        property string videoMode: "fullscreen"
-                        property string audioMode: "none"
                         icon: "fullscreen"
                         text: qsTr("Record fullscreen")
                         activeText: qsTr("Fullscreen")
@@ -107,8 +114,6 @@ StyledRect {
                     },
                     MenuItem {
                         property string mode: "region"
-                        property string videoMode: "region"
-                        property string audioMode: "none"
                         icon: "screenshot_region"
                         text: qsTr("Record region")
                         activeText: qsTr("Region")
@@ -116,38 +121,9 @@ StyledRect {
                     },
                     MenuItem {
                         property string mode: "window"
-                        property string videoMode: "window"
-                        property string audioMode: "none"
                         icon: "web_asset"
                         text: qsTr("Record window")
                         activeText: qsTr("Window")
-                        onClicked: startRecording()
-                    },
-                    MenuItem {
-                        property string mode: "mic"
-                        property string videoMode: "fullscreen"
-                        property string audioMode: "mic"
-                        icon: "mic"
-                        text: qsTr("Record fullscreen with mic")
-                        activeText: qsTr("Mic")
-                        onClicked: startRecording()
-                    },
-                    MenuItem {
-                        property string mode: "system"
-                        property string videoMode: "fullscreen"
-                        property string audioMode: "system"
-                        icon: "volume_up"
-                        text: qsTr("Record fullscreen with system audio")
-                        activeText: qsTr("System")
-                        onClicked: startRecording()
-                    },
-                    MenuItem {
-                        property string mode: "combined"
-                        property string videoMode: "fullscreen"
-                        property string audioMode: "combined"
-                        icon: "settings_voice"
-                        text: qsTr("Record fullscreen with mic + system")
-                        activeText: qsTr("Combined")
                         onClicked: startRecording()
                     }
                 ]
@@ -174,6 +150,144 @@ StyledRect {
 
             Behavior on implicitHeight {
                 Anim { duration: Appearance.anim.durations.small }
+            }
+        }
+
+        // Audio Sources Section
+        ColumnLayout {
+            Layout.fillWidth: true
+            visible: !root.actuallyRecording
+            spacing: Appearance.spacing.small
+
+            RowLayout {
+                spacing: Appearance.spacing.small
+
+                StyledText {
+                    text: qsTr("Audio Sources")
+                    font.pointSize: Appearance.font.size.small
+                    color: Colours.palette.m3onSurfaceVariant
+                }
+
+                Item { Layout.fillWidth: true }
+
+                IconButton {
+                    icon: root.props.recordingAudioExpanded ? "expand_less" : "expand_more"
+                    type: IconButton.Tonal
+                    font.pointSize: Appearance.font.size.small
+                    onClicked: {
+                        root.props.recordingAudioExpanded = !root.props.recordingAudioExpanded;
+                    }
+                }
+            }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                visible: root.props.recordingAudioExpanded
+                spacing: Appearance.spacing.smaller
+
+                // System Audio (Default Sink)
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.normal
+
+                    StyledSwitch {
+                        checked: Config.utilities.recording.recordSystem
+                        onToggled: {
+                            Config.utilities.recording.recordSystem = checked;
+                            Config.save();
+                        }
+                    }
+
+                    StyledText {
+                        Layout.preferredWidth: 85
+                        text: qsTr("System")
+                        font.pointSize: Appearance.font.size.small
+                        elide: Text.ElideRight
+                    }
+
+                    StyledSlider {
+                        id: systemVolumeSlider
+                        Layout.fillWidth: true
+                        implicitHeight: 24
+                        opacity: Config.utilities.recording.recordSystem ? 1.0 : 0.5
+                        from: 0
+                        to: 1
+                        value: Audio.volume
+                        onMoved: {
+                            Audio.setVolume(value);
+                        }
+                    }
+
+                    StyledText {
+                        text: Math.round(Audio.volume * 100) + "%"
+                        font.pointSize: Appearance.font.size.small
+                        color: Colours.palette.m3onSurfaceVariant
+                        Layout.preferredWidth: 40
+                    }
+
+                    IconButton {
+                        icon: Audio.muted ? "volume_off" : "volume_up"
+                        type: Audio.muted ? IconButton.Filled : IconButton.Tonal
+                        font.pointSize: Appearance.font.size.small
+                        onClicked: {
+                            if (Audio.sink?.audio) {
+                                Audio.sink.audio.muted = !Audio.sink.audio.muted;
+                            }
+                        }
+                    }
+                }
+
+                // Microphone (Default Source)
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Appearance.spacing.normal
+
+                    StyledSwitch {
+                        checked: Config.utilities.recording.recordMicrophone
+                        onToggled: {
+                            Config.utilities.recording.recordMicrophone = checked;
+                            Config.save();
+                        }
+                    }
+
+                    StyledText {
+                        Layout.preferredWidth: 85
+                        text: qsTr("Microphone")
+                        font.pointSize: Appearance.font.size.small
+                        elide: Text.ElideRight
+                    }
+
+                    StyledSlider {
+                        id: micVolumeSlider
+                        Layout.fillWidth: true
+                        implicitHeight: 24
+                        opacity: Config.utilities.recording.recordMicrophone ? 1.0 : 0.5
+                        from: 0
+                        to: 1
+                        value: Audio.sourceVolume
+                        onMoved: {
+                            Audio.setSourceVolume(value);
+                        }
+                    }
+
+                    StyledText {
+                        text: Math.round(Audio.sourceVolume * 100) + "%"
+                        font.pointSize: Appearance.font.size.small
+                        color: Colours.palette.m3onSurfaceVariant
+                        Layout.preferredWidth: 40
+                    }
+
+                    IconButton {
+                        icon: Audio.sourceMuted ? "mic_off" : "mic"
+                        type: Audio.sourceMuted ? IconButton.Filled : IconButton.Tonal
+                        font.pointSize: Appearance.font.size.small
+                        onClicked: {
+                            if (Audio.source?.audio) {
+                                Audio.source.audio.muted = !Audio.source.audio.muted;
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -340,41 +454,10 @@ StyledRect {
         // Clear any previous errors
         root.lastError = "";
 
-        const mode = root.props.recordingMode || "fullscreen";
-
-        // Map the combined mode to separate video and audio modes
-        let videoMode = "fullscreen";
-        let audioMode = "none";
-
-        switch(mode) {
-            case "fullscreen":
-                videoMode = "fullscreen";
-                audioMode = "none";
-                break;
-            case "region":
-                videoMode = "region";
-                audioMode = "none";
-                break;
-            case "window":
-                videoMode = "window";
-                audioMode = "none";
-                break;
-            case "mic":
-                videoMode = "fullscreen";
-                audioMode = "mic";
-                break;
-            case "system":
-                videoMode = "fullscreen";
-                audioMode = "system";
-                break;
-            case "combined":
-                videoMode = "fullscreen";
-                audioMode = "combined";
-                break;
-        }
+        const videoMode = Config.utilities.recording.videoMode || "fullscreen";
+        const audioMode = root.currentAudioMode;
 
         root.currentVideoMode = videoMode;
-        root.currentAudioMode = audioMode;
 
         console.log("Starting recording - Video:", videoMode, "Audio:", audioMode);
 
@@ -433,15 +516,6 @@ StyledRect {
     Component.onCompleted: {
         // Sync initial state
         root.actuallyRecording = Recorder.running;
-
-        // Set initial mode if saved
-        if (root.props.recordingMode) {
-            const mode = root.props.recordingMode;
-            const item = menuItems.find(m => m.mode === mode);
-            if (item) {
-                root.currentVideoMode = item.videoMode;
-                root.currentAudioMode = item.audioMode;
-            }
-        }
+        root.currentVideoMode = Config.utilities.recording.videoMode || "fullscreen";
     }
 }

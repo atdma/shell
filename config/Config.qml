@@ -379,6 +379,11 @@ Singleton {
             vpn: {
                 enabled: utilities.vpn.enabled,
                 provider: utilities.vpn.provider
+            },
+            recording: {
+                videoMode: utilities.recording.videoMode,
+                recordSystem: utilities.recording.recordSystem,
+                recordMicrophone: utilities.recording.recordMicrophone
             }
         };
     }
