@@ -7,6 +7,13 @@ JsonObject {
     property Sizes sizes: Sizes {}
     property Toasts toasts: Toasts {}
     property Vpn vpn: Vpn {}
+    property Recording recording: Recording {}
+
+    component Recording: JsonObject {
+        property string videoMode: "fullscreen"
+        property bool recordSystem: false
+        property bool recordMicrophone: false
+    }
 
     component Sizes: JsonObject {
         property int width: 430
