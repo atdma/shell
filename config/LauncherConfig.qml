@@ -17,6 +17,7 @@ JsonObject {
     component UseFuzzy: JsonObject {
         property bool apps: false
         property bool actions: false
+        property bool emoji: false
         property bool schemes: false
         property bool variants: false
         property bool wallpapers: false
@@ -51,6 +52,14 @@ JsonObject {
             icon: "image",
             description: "Change the current wallpaper",
             command: ["autocomplete", "wallpaper"],
+            enabled: true,
+            dangerous: false
+        },
+        {
+            name: "Emoji",
+            icon: "emoji_emotions",
+            description: "Browse emoji list",
+            command: ["autocomplete", "emoji"],
             enabled: true,
             dangerous: false
         },

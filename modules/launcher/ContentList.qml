@@ -20,13 +20,16 @@ Item {
     required property int rounding
 
     readonly property bool showWallpapers: search.text.startsWith(`${Config.launcher.actionPrefix}wallpaper `)
-    readonly property Item currentList: showWallpapers ? wallpaperList.item : appList.item
+    readonly property bool showEmoji: search.text.startsWith(`${Config.launcher.actionPrefix}emoji `)
+    readonly property real emojiMaxHeight: (Config.launcher.sizes.itemHeight + Appearance.spacing.small)
+        * Config.launcher.maxShown - Appearance.spacing.small
+    readonly property Item currentList: showWallpapers ? wallpaperList.item : (showEmoji ? emojiGrid.item : appList.item)
 
     anchors.horizontalCenter: parent.horizontalCenter
     anchors.bottom: parent.bottom
 
     clip: true
-    state: showWallpapers ? "wallpapers" : "apps"
+    state: showWallpapers ? "wallpapers" : (showEmoji ? "emoji" : "apps")
 
     states: [
         State {
@@ -36,6 +39,20 @@ Item {
                 root.implicitWidth: Config.launcher.sizes.itemWidth
                 root.implicitHeight: Math.min(root.maxHeight, appList.implicitHeight > 0 ? appList.implicitHeight : empty.implicitHeight)
                 appList.active: true
+            }
+
+            AnchorChanges {
+                anchors.left: root.parent.left
+                anchors.right: root.parent.right
+            }
+        },
+        State {
+            name: "emoji"
+
+            PropertyChanges {
+                root.implicitWidth: Config.launcher.sizes.itemWidth
+                root.implicitHeight: Math.min(root.maxHeight, emojiGrid.implicitHeight > 0 ? emojiGrid.implicitHeight : empty.implicitHeight)
+                emojiGrid.active: true
             }
 
             AnchorChanges {
@@ -104,6 +121,20 @@ Item {
         }
     }
 
+    Loader {
+        id: emojiGrid
+
+        active: false
+
+        anchors.fill: parent
+
+        sourceComponent: EmojiGrid {
+            search: root.search
+            visibilities: root.visibilities
+            maxHeight: Math.min(root.maxHeight, root.emojiMaxHeight)
+        }
+    }
+
     Row {
         id: empty
 
@@ -117,7 +148,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
 
         MaterialIcon {
-            text: root.state === "wallpapers" ? "wallpaper_slideshow" : "manage_search"
+            text: root.state === "wallpapers" ? "wallpaper_slideshow" : (root.state === "emoji" ? "emoji_emotions" : "manage_search")
             color: Colours.palette.m3onSurfaceVariant
             font.pointSize: Appearance.font.size.extraLarge
 
@@ -128,7 +159,7 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
 
             StyledText {
-                text: root.state === "wallpapers" ? qsTr("No wallpapers found") : qsTr("No results")
+                text: root.state === "wallpapers" ? qsTr("No wallpapers found") : (root.state === "emoji" ? qsTr("No emoji found") : qsTr("No results"))
                 color: Colours.palette.m3onSurfaceVariant
                 font.pointSize: Appearance.font.size.larger
                 font.weight: 500

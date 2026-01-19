@@ -274,6 +274,7 @@ Singleton {
             useFuzzy: {
                 apps: launcher.useFuzzy.apps,
                 actions: launcher.useFuzzy.actions,
+                emoji: launcher.useFuzzy.emoji,
                 schemes: launcher.useFuzzy.schemes,
                 variants: launcher.useFuzzy.variants,
                 wallpapers: launcher.useFuzzy.wallpapers
