@@ -17,6 +17,7 @@ JsonObject {
     component UseFuzzy: JsonObject {
         property bool apps: false
         property bool actions: false
+        property bool clipboard: false
         property bool schemes: false
         property bool variants: false
         property bool wallpapers: false
@@ -51,6 +52,14 @@ JsonObject {
             icon: "image",
             description: "Change the current wallpaper",
             command: ["autocomplete", "wallpaper"],
+            enabled: true,
+            dangerous: false
+        },
+        {
+            name: "Clipboard",
+            icon: "content_paste",
+            description: "Browse clipboard history",
+            command: ["autocomplete", "clipboard"],
             enabled: true,
             dangerous: false
         },

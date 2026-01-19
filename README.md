@@ -457,6 +457,14 @@ default, you must create it manually.
                 "dangerous": false
             },
             {
+                "name": "Clipboard",
+                "icon": "content_paste",
+                "description": "Browse clipboard history",
+                "command": ["autocomplete", "clipboard"],
+                "enabled": true,
+                "dangerous": false
+            },
+            {
                 "name": "Variant",
                 "icon": "colors",
                 "description": "Change the current scheme variant",
@@ -554,6 +562,7 @@ default, you must create it manually.
         "useFuzzy": {
             "apps": false,
             "actions": false,
+            "clipboard": false,
             "schemes": false,
             "variants": false,
             "wallpapers": false
