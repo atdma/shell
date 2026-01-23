@@ -18,6 +18,8 @@ StyledRect {
     property real horizontalPadding: Appearance.padding.large
     property real verticalPadding: Appearance.padding.normal
     property string tooltip: ""
+    readonly property bool hasLabel: root.label !== ""
+    readonly property real labelMaxWidth: Math.max(0, root.width - root.horizontalPadding * 2 - toggleBtnIcon.implicitWidth - (hasLabel ? toggleBtnContent.spacing : 0))
 
     property bool hovered: false
     signal clicked
@@ -57,30 +59,53 @@ StyledRect {
         id: toggleBtnInner
 
         anchors.centerIn: parent
-        spacing: Appearance.spacing.normal
+        width: Math.max(0, root.width - root.horizontalPadding * 2)
+        height: Math.max(0, root.height - root.verticalPadding * 2)
+        spacing: 0
 
-        MaterialIcon {
-            id: toggleBtnIcon
+        Item {
+            Layout.fillWidth: true
+        }
 
-            visible: !!text
-            fill: root.toggled ? 1 : 0
-            text: root.icon
-            color: root.toggled ? Colours.palette[`m3on${root.accent}`] : Colours.palette[`m3on${root.accent}Container`]
-            font.pointSize: root.iconSize
+        RowLayout {
+            id: toggleBtnContent
 
-            Behavior on fill {
-                Anim {}
+            spacing: root.hasLabel ? Appearance.spacing.normal : 0
+
+            MaterialIcon {
+                id: toggleBtnIcon
+
+                visible: !!text
+                fill: root.toggled ? 1 : 0
+                text: root.icon
+                color: root.toggled ? Colours.palette[`m3on${root.accent}`] : Colours.palette[`m3on${root.accent}Container`]
+                font.pointSize: root.iconSize
+
+                Behavior on fill {
+                    Anim {}
+                }
+            }
+
+            Loader {
+                active: root.hasLabel
+                visible: active
+                Layout.minimumWidth: 0
+
+                sourceComponent: StyledText {
+                    width: Math.min(implicitWidth, root.labelMaxWidth)
+                    height: parent ? parent.height : implicitHeight
+                    text: root.label
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    color: root.toggled ? Colours.palette[`m3on${root.accent}`] : Colours.palette[`m3on${root.accent}Container`]
+                    autoFit: true
+                    minPointSize: Math.max(8, Math.round(font.pointSize * 0.7))
+                }
             }
         }
 
-        Loader {
-            active: !!root.label
-            visible: active
-
-            sourceComponent: StyledText {
-                text: root.label
-                color: root.toggled ? Colours.palette[`m3on${root.accent}`] : Colours.palette[`m3on${root.accent}Container`]
-            }
+        Item {
+            Layout.fillWidth: true
         }
     }
 

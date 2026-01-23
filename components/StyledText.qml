@@ -7,6 +7,8 @@ import QtQuick
 Text {
     id: root
 
+    property bool autoFit: false
+    property int minPointSize: 8
     property bool animate: false
     property string animateProp: "scale"
     property real animateFrom: 0
@@ -18,6 +20,9 @@ Text {
     color: Colours.palette.m3onSurface
     font.family: Appearance.font.family.sans
     font.pointSize: Appearance.font.size.smaller
+    fontSizeMode: root.autoFit ? Text.Fit : Text.FixedSize
+    minimumPointSize: root.autoFit ? root.minPointSize : 0
+    elide: root.autoFit ? Text.ElideRight : Text.ElideNone
 
     Behavior on color {
         CAnim {}

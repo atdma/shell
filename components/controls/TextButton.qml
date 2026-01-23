@@ -69,7 +69,13 @@ StyledRect {
         id: label
 
         anchors.centerIn: parent
+        width: Math.max(0, parent.width - root.horizontalPadding * 2)
+        height: Math.max(0, parent.height - root.verticalPadding * 2)
+        horizontalAlignment: Text.AlignHCenter
+        verticalAlignment: Text.AlignVCenter
         color: root.internalChecked ? root.activeOnColour : root.inactiveOnColour
+        autoFit: true
+        minPointSize: Math.max(8, Math.round(font.pointSize * 0.7))
     }
 
     Behavior on radius {

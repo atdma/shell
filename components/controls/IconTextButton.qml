@@ -21,6 +21,7 @@ StyledRect {
     property real verticalPadding: Appearance.padding.smaller
     property alias font: label.font
     property int type: IconTextButton.Filled
+    readonly property real labelMaxWidth: Math.max(0, root.width - root.horizontalPadding * 2 - iconLabel.implicitWidth - rowContent.spacing)
 
     property alias stateLayer: stateLayer
     property alias iconLabel: iconLabel
@@ -58,27 +59,48 @@ StyledRect {
         id: row
 
         anchors.centerIn: parent
-        spacing: Appearance.spacing.small
+        width: Math.max(0, root.width - root.horizontalPadding * 2)
+        height: Math.max(0, root.height - root.verticalPadding * 2)
+        spacing: 0
 
-        MaterialIcon {
-            id: iconLabel
+        Item {
+            Layout.fillWidth: true
+        }
 
-            Layout.alignment: Qt.AlignVCenter
-            Layout.topMargin: Math.round(fontInfo.pointSize * 0.0575)
-            color: root.internalChecked ? root.activeOnColour : root.inactiveOnColour
-            fill: root.internalChecked ? 1 : 0
+        RowLayout {
+            id: rowContent
 
-            Behavior on fill {
-                Anim {}
+            spacing: Appearance.spacing.small
+
+            MaterialIcon {
+                id: iconLabel
+
+                Layout.alignment: Qt.AlignVCenter
+                Layout.topMargin: Math.round(fontInfo.pointSize * 0.0575)
+                color: root.internalChecked ? root.activeOnColour : root.inactiveOnColour
+                fill: root.internalChecked ? 1 : 0
+
+                Behavior on fill {
+                    Anim {}
+                }
+            }
+
+            StyledText {
+                id: label
+
+                Layout.alignment: Qt.AlignVCenter
+                Layout.topMargin: -Math.round(iconLabel.fontInfo.pointSize * 0.0575)
+                width: Math.min(implicitWidth, root.labelMaxWidth)
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                color: root.internalChecked ? root.activeOnColour : root.inactiveOnColour
+                autoFit: true
+                minPointSize: Math.max(8, Math.round(font.pointSize * 0.7))
             }
         }
 
-        StyledText {
-            id: label
-
-            Layout.alignment: Qt.AlignVCenter
-            Layout.topMargin: -Math.round(iconLabel.fontInfo.pointSize * 0.0575)
-            color: root.internalChecked ? root.activeOnColour : root.inactiveOnColour
+        Item {
+            Layout.fillWidth: true
         }
     }
 
