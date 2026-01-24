@@ -21,6 +21,9 @@ qt6_add_qml_module(caelestia-welcome
     VERSION 1.0
     QML_FILES
         main.qml
+        Colours.qml
+    SOURCES
+        qmldir
 )
 
 target_link_libraries(caelestia-welcome PRIVATE
