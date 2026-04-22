@@ -16,6 +16,7 @@ QtObject {
     readonly property EthernetState ethernet: EthernetState {}
     readonly property LauncherState launcher: LauncherState {}
     readonly property VpnState vpn: VpnState {}
+    readonly property MonitorState monitor: MonitorState {}
 
     onActiveChanged: activeIndex = Math.max(0, panes.indexOf(active))
     onActiveIndexChanged: if (panes[activeIndex])

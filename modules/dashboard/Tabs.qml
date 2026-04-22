@@ -50,6 +50,11 @@ Item {
             text: qsTr("Weather")
         }
 
+        Tab {
+            iconName: "monitor"
+            text: qsTr("Monitors")
+        }
+
         // Tab {
         //     iconName: "workspaces"
         //     text: qsTr("Workspaces")
