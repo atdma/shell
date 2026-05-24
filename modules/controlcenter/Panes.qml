@@ -7,6 +7,7 @@ import "appearance"
 import "taskbar"
 import "notifications"
 import "launcher"
+import "monitors"
 import "dashboard"
 import QtQuick
 import QtQuick.Layouts

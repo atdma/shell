@@ -6,6 +6,7 @@ import qs.services
 
 Variants {
     model: Screens.screens
+    model: Screens.screens
 
     Scope {
         id: scope

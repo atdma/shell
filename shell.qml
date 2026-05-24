@@ -27,4 +27,7 @@ ShellRoot {
     IdleMonitors {
         lock: lock
     }
+    MonitorIdentifier {
+        id: monitorIdentifier
+    }
 }
