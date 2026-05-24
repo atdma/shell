@@ -1,20 +1,19 @@
 pragma ComponentBehavior: Bound
 
-import qs.components
-import qs.components.images
-import qs.components.filedialog
-import qs.services
-import qs.config
-import qs.utils
 import QtQuick
+import Caelestia.Config
+import qs.components
+import qs.components.filedialog
+import qs.components.images
+import qs.services
+import qs.utils
 
 Item {
     id: root
 
     property string source: Wallpapers.current
     property Image current: one
-
-    anchors.fill: parent
+    property bool completed
 
     onSourceChanged: {
         if (!source)
@@ -27,43 +26,47 @@ Item {
 
     Component.onCompleted: {
         if (source)
-            Qt.callLater(() => one.update());
+            Qt.callLater(() => {
+                one.update();
+                completed = true;
+            });
     }
 
     Loader {
+        asynchronous: true
         anchors.fill: parent
 
-        active: !root.source
+        active: root.completed && !root.source
 
         sourceComponent: StyledRect {
             color: Colours.palette.m3surfaceContainer
 
             Row {
                 anchors.centerIn: parent
-                spacing: Appearance.spacing.large
+                spacing: Tokens.spacing.large
 
                 MaterialIcon {
                     text: "sentiment_stressed"
                     color: Colours.palette.m3onSurfaceVariant
-                    font.pointSize: Appearance.font.size.extraLarge * 5
+                    font.pointSize: Tokens.font.size.extraLarge * 5
                 }
 
                 Column {
                     anchors.verticalCenter: parent.verticalCenter
-                    spacing: Appearance.spacing.small
+                    spacing: Tokens.spacing.small
 
                     StyledText {
                         text: qsTr("Wallpaper missing?")
                         color: Colours.palette.m3onSurfaceVariant
-                        font.pointSize: Appearance.font.size.extraLarge * 2
+                        font.pointSize: Tokens.font.size.extraLarge * 2
                         font.bold: true
                     }
 
                     StyledRect {
-                        implicitWidth: selectWallText.implicitWidth + Appearance.padding.large * 2
-                        implicitHeight: selectWallText.implicitHeight + Appearance.padding.small * 2
+                        implicitWidth: selectWallText.implicitWidth + Tokens.padding.large * 2
+                        implicitHeight: selectWallText.implicitHeight + Tokens.padding.small * 2
 
-                        radius: Appearance.rounding.full
+                        radius: Tokens.rounding.full
                         color: Colours.palette.m3primary
 
                         FileDialog {
@@ -78,10 +81,7 @@ Item {
                         StateLayer {
                             radius: parent.radius
                             color: Colours.palette.m3onPrimary
-
-                            function onClicked(): void {
-                                dialog.open();
-                            }
+                            onClicked: dialog.open()
                         }
 
                         StyledText {
@@ -91,7 +91,7 @@ Item {
 
                             text: qsTr("Set it now!")
                             color: Colours.palette.m3onPrimary
-                            font.pointSize: Appearance.font.size.large
+                            font.pointSize: Tokens.font.size.large
                         }
                     }
                 }

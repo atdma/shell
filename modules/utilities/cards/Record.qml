@@ -20,8 +20,9 @@ StyledRect {
     color: Colours.tPalette.m3surfaceContainer
 
     property bool actuallyRecording: Recorder.running
+    readonly property bool recordingBusy: Recorder.running || Recorder.starting
     property string lastError: ""
-    property string currentVideoMode: Config.utilities.recording.videoMode
+    property string currentVideoMode: Recorder.videoMode || Config.utilities.recording.videoMode || "fullscreen"
 
     // Computed audio mode based on settings
     readonly property string currentAudioMode: {
@@ -52,7 +53,7 @@ StyledRect {
                 }
 
                 radius: Appearance.rounding.full
-                color: root.actuallyRecording ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
+                color: root.recordingBusy ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
                 MaterialIcon {
                     id: icon
@@ -61,7 +62,7 @@ StyledRect {
                     anchors.horizontalCenterOffset: -0.5
                     anchors.verticalCenterOffset: 1.5
                     text: "screen_record"
-                    color: root.actuallyRecording ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                    color: root.recordingBusy ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
                     font.pointSize: Appearance.font.size.large
                 }
             }
@@ -81,11 +82,12 @@ StyledRect {
                     Layout.fillWidth: true
                     text: {
                         if (root.lastError !== "") return qsTr("Error: %1").arg(root.lastError);
+                        if (Recorder.starting) return root.startingText(Recorder.videoMode || root.currentVideoMode);
                         if (Recorder.paused) return qsTr("Recording paused");
                         if (root.actuallyRecording) {
-                            const videoText = root.currentVideoMode;
-                            const audioText = root.currentAudioMode === "none" ? "no audio" : root.currentAudioMode;
-                            return qsTr("Recording %1 - %2").arg(videoText).arg(audioText);
+                            const videoText = root.videoModeLabel(Recorder.videoMode || root.currentVideoMode);
+                            const audioText = root.audioModeLabel(Recorder.audioMode || root.currentAudioMode);
+                            return qsTr("Recording %1 with %2").arg(videoText).arg(audioText);
                         }
                         return qsTr("Recording off");
                     }
@@ -96,7 +98,7 @@ StyledRect {
             }
 
             SplitButton {
-                disabled: root.actuallyRecording
+                disabled: root.recordingBusy
                 active: menuItems.find(m => m.mode === Config.utilities.recording.videoMode) ?? menuItems[0]
                 menu.onItemSelected: item => {
                     Config.utilities.recording.videoMode = item.mode;
@@ -110,21 +112,21 @@ StyledRect {
                         icon: "fullscreen"
                         text: qsTr("Record fullscreen")
                         activeText: qsTr("Fullscreen")
-                        onClicked: startRecording()
+                        onClicked: startRecording(mode)
                     },
                     MenuItem {
                         property string mode: "region"
                         icon: "screenshot_region"
                         text: qsTr("Record region")
                         activeText: qsTr("Region")
-                        onClicked: startRecording()
+                        onClicked: startRecording(mode)
                     },
                     MenuItem {
                         property string mode: "window"
                         icon: "web_asset"
                         text: qsTr("Record window")
                         activeText: qsTr("Window")
-                        onClicked: startRecording()
+                        onClicked: startRecording(mode)
                     }
                 ]
             }
@@ -156,7 +158,7 @@ StyledRect {
         // Audio Sources Section
         ColumnLayout {
             Layout.fillWidth: true
-            visible: !root.actuallyRecording
+            visible: !root.recordingBusy
             spacing: Appearance.spacing.small
 
             RowLayout {
@@ -171,19 +173,31 @@ StyledRect {
                 Item { Layout.fillWidth: true }
 
                 IconButton {
-                    icon: root.props.recordingAudioExpanded ? "expand_less" : "expand_more"
-                    type: IconButton.Tonal
-                    font.pointSize: Appearance.font.size.small
+                    icon: root.props.recordingAudioExpanded ? "unfold_less" : "unfold_more"
+                    type: IconButton.Text
+                    label.animate: true
                     onClicked: {
                         root.props.recordingAudioExpanded = !root.props.recordingAudioExpanded;
                     }
                 }
             }
 
-            ColumnLayout {
+            Item {
+                id: audioSourcesContainer
+
                 Layout.fillWidth: true
-                visible: root.props.recordingAudioExpanded
-                spacing: Appearance.spacing.smaller
+                Layout.preferredHeight: root.props.recordingAudioExpanded ? audioSourcesLayout.implicitHeight : 0
+                clip: true
+                enabled: root.props.recordingAudioExpanded
+                opacity: root.props.recordingAudioExpanded ? 1 : 0
+                visible: root.props.recordingAudioExpanded || height > 0
+
+                ColumnLayout {
+                    id: audioSourcesLayout
+
+                    width: parent.width
+                    y: root.props.recordingAudioExpanded ? 0 : -Appearance.spacing.small
+                    spacing: Appearance.spacing.smaller
 
                 // System Audio (Default Sink)
                 RowLayout {
@@ -288,13 +302,26 @@ StyledRect {
                         }
                     }
                 }
+
+                    Behavior on y {
+                        Anim { duration: Appearance.anim.durations.small }
+                    }
+                }
+
+                Behavior on Layout.preferredHeight {
+                    Anim { type: Anim.DefaultSpatial }
+                }
+
+                Behavior on opacity {
+                    Anim { duration: Appearance.anim.durations.small }
+                }
             }
         }
 
         Loader {
             id: listOrControls
 
-            property bool running: root.actuallyRecording
+            property bool running: root.recordingBusy
 
             Layout.fillWidth: true
             Layout.preferredHeight: implicitHeight
@@ -371,7 +398,7 @@ StyledRect {
 
             StyledRect {
                 radius: Appearance.rounding.full
-                color: Recorder.paused ? Colours.palette.m3tertiary : Colours.palette.m3error
+                color: Recorder.starting ? Colours.palette.m3secondary : Recorder.paused ? Colours.palette.m3tertiary : Colours.palette.m3error
 
                 implicitWidth: recText.implicitWidth + Appearance.padding.normal * 2
                 implicitHeight: recText.implicitHeight + Appearance.padding.smaller * 2
@@ -380,8 +407,8 @@ StyledRect {
                     id: recText
                     anchors.centerIn: parent
                     animate: true
-                    text: Recorder.paused ? "PAUSED" : "REC"
-                    color: Recorder.paused ? Colours.palette.m3onTertiary : Colours.palette.m3onError
+                    text: Recorder.starting ? "WAIT" : Recorder.paused ? "PAUSED" : "REC"
+                    color: Recorder.starting ? Colours.palette.m3onSecondary : Recorder.paused ? Colours.palette.m3onTertiary : Colours.palette.m3onError
                     font.family: Appearance.font.family.mono
                 }
 
@@ -390,7 +417,7 @@ StyledRect {
                 }
 
                 SequentialAnimation on opacity {
-                    running: !Recorder.paused && root.actuallyRecording
+                    running: !Recorder.starting && !Recorder.paused && root.actuallyRecording
                     alwaysRunToEnd: true
                     loops: Animation.Infinite
                     Anim {
@@ -410,6 +437,9 @@ StyledRect {
 
             StyledText {
                 text: {
+                    if (Recorder.starting)
+                        return root.startingText(Recorder.videoMode || root.currentVideoMode);
+
                     const elapsed = Recorder.elapsed;
                     const hours = Math.floor(elapsed / 3600);
                     const mins = Math.floor((elapsed % 3600) / 60);
@@ -429,6 +459,7 @@ StyledRect {
             }
 
             IconButton {
+                disabled: Recorder.starting
                 label.animate: true
                 icon: Recorder.paused ? "play_arrow" : "pause"
                 toggle: true
@@ -450,19 +481,45 @@ StyledRect {
         }
     }
 
-    function startRecording() {
+    function videoModeLabel(mode) {
+        switch (mode) {
+        case "region": return qsTr("Region");
+        case "window": return qsTr("Window");
+        default: return qsTr("Fullscreen");
+        }
+    }
+
+    function audioModeLabel(mode) {
+        switch (mode) {
+        case "combined": return qsTr("system audio + microphone");
+        case "system": return qsTr("system audio");
+        case "mic": return qsTr("microphone");
+        default: return qsTr("no audio");
+        }
+    }
+
+    function startingText(mode) {
+        switch (mode) {
+        case "region": return qsTr("Select a recording region");
+        case "window": return qsTr("Select a window to record");
+        default: return qsTr("Starting fullscreen recording");
+        }
+    }
+
+    function startRecording(videoMode) {
         // Clear any previous errors
         root.lastError = "";
 
-        const videoMode = Config.utilities.recording.videoMode || "fullscreen";
+        const selectedVideoMode = videoMode || Config.utilities.recording.videoMode || "fullscreen";
         const audioMode = root.currentAudioMode;
 
-        root.currentVideoMode = videoMode;
+        Config.utilities.recording.videoMode = selectedVideoMode;
+        root.currentVideoMode = selectedVideoMode;
 
-        console.log("Starting recording - Video:", videoMode, "Audio:", audioMode);
+        console.log("Starting recording - Video:", selectedVideoMode, "Audio:", audioMode);
 
         // Call Recorder service
-        const success = Recorder.start(videoMode, audioMode);
+        const success = Recorder.start(selectedVideoMode, audioMode);
 
         if (!success) {
             root.lastError = "Failed to start recording";
@@ -516,6 +573,6 @@ StyledRect {
     Component.onCompleted: {
         // Sync initial state
         root.actuallyRecording = Recorder.running;
-        root.currentVideoMode = Config.utilities.recording.videoMode || "fullscreen";
+        root.currentVideoMode = Recorder.videoMode || Config.utilities.recording.videoMode || "fullscreen";
     }
 }

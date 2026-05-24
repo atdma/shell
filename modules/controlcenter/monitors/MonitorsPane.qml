@@ -8,7 +8,7 @@ import qs.components.controls
 import qs.components.effects
 import qs.components.containers
 import qs.services
-import qs.config
+import Caelestia.Config
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
@@ -18,8 +18,46 @@ Item {
     id: root
 
     required property Session session
+    readonly property var monitorModel: Hyprctl.monitors
+
+    function selectMonitor(monitor: var): void {
+        if (!monitor)
+            return;
+        root.session.monitor.active = {
+            id: monitor.id,
+            name: monitor.name
+        };
+    }
+
+    function selectedMonitor(): var {
+        const active = root.session.monitor.active;
+        if (!active)
+            return null;
+
+        for (const monitor of root.monitorModel) {
+            if (monitor.name === active.name || monitor.id === active.id)
+                return monitor;
+        }
+
+        return null;
+    }
+
+    function ensureSingleMonitorSelected(): void {
+        if (!root.session.monitor.active && (root.monitorModel?.length ?? 0) === 1)
+            root.selectMonitor(root.monitorModel[0]);
+    }
 
     anchors.fill: parent
+
+    Component.onCompleted: Qt.callLater(root.ensureSingleMonitorSelected)
+
+    Connections {
+        target: Hyprctl
+
+        function onMonitorsChanged(): void {
+            root.ensureSingleMonitorSelected();
+        }
+    }
 
     // ── Two-column split (mirrors NetworkingPane) ──────────────────────
     SplitPaneLayout {
@@ -44,16 +82,16 @@ Item {
 
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    spacing: Appearance.spacing.normal
+                    spacing: Tokens.spacing.normal
 
                     // Header row
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: Appearance.spacing.smaller
+                        spacing: Tokens.spacing.smaller
 
                         StyledText {
                             text: qsTr("Monitors")
-                            font.pointSize: Appearance.font.size.large
+                            font.pointSize: Tokens.font.size.large
                             font.weight: 500
                         }
 
@@ -64,9 +102,9 @@ Item {
                             toggled: Monitors.identifying
                             icon: "tv_signin"
                             accent: "Secondary"
-                            iconSize: Appearance.font.size.normal
-                            horizontalPadding: Appearance.padding.normal
-                            verticalPadding: Appearance.padding.smaller
+                            iconSize: Tokens.font.size.normal
+                            horizontalPadding: Tokens.padding.normal
+                            verticalPadding: Tokens.padding.smaller
                             tooltip: qsTr("Identify monitors")
 
                             onClicked: Monitors.toggleIdentification()
@@ -76,14 +114,14 @@ Item {
                     // Subtitle
                     StyledText {
                         Layout.fillWidth: true
-                        text: qsTr("%1 display(s) connected").arg(Hyprland.monitors.length)
+                        text: qsTr("%1 display(s) connected").arg(root.monitorModel.length)
                         color: Colours.palette.m3outline
-                        font.pointSize: Appearance.font.size.small
+                        font.pointSize: Tokens.font.size.small
                     }
 
-                    // Monitor list — use Hyprland.monitors directly as model
+                    // Monitor list — use hyprctl data so refresh rate and modes are available
                     Repeater {
-                        model: Hyprland.monitors
+                        model: root.monitorModel
 
                         delegate: MonitorListItem {
                             required property var modelData
@@ -94,9 +132,10 @@ Item {
                             monitor: modelData
                             active: root.session.monitor.active !== null
                                 && root.session.monitor.active !== undefined
-                                && root.session.monitor.active.id === modelData.id
+                                && (root.session.monitor.active.id === modelData.id
+                                    || root.session.monitor.active.name === modelData.name)
 
-                            onClicked: root.session.monitor.active = modelData
+                            onClicked: root.selectMonitor(modelData)
                         }
                     }
                 }
@@ -108,7 +147,7 @@ Item {
             Item {
                 id: rightPaneItem
 
-                property var selectedMonitor: root.session.monitor.active
+                property var selectedMonitor: root.selectedMonitor()
                 property string paneId: selectedMonitor
                     ? ("mon:" + (selectedMonitor.name ?? ""))
                     : "overview"
@@ -127,6 +166,15 @@ Item {
                 Connections {
                     target: root.session.monitor
                     function onActiveChanged(): void {
+                        rightPaneItem.selectedMonitor = root.selectedMonitor();
+                        rightPaneItem.nextComponent = rightPaneItem.resolveComponent();
+                    }
+                }
+
+                Connections {
+                    target: Hyprctl
+                    function onMonitorsChanged(): void {
+                        rightPaneItem.selectedMonitor = root.selectedMonitor();
                         rightPaneItem.nextComponent = rightPaneItem.resolveComponent();
                     }
                 }
@@ -166,11 +214,11 @@ Item {
 
         signal clicked()
 
-        implicitHeight: itemRow.implicitHeight + Appearance.padding.normal * 2
+        implicitHeight: itemRow.implicitHeight + Tokens.padding.normal * 2
 
         StyledRect {
             anchors.fill: parent
-            radius: Appearance.rounding.normal
+            radius: Tokens.rounding.normal
             color: Qt.alpha(
                 Colours.tPalette.m3surfaceContainer,
                 listItem.active ? Colours.tPalette.m3surfaceContainer.a : 0
@@ -186,14 +234,14 @@ Item {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.margins: Appearance.padding.normal
-                spacing: Appearance.spacing.normal
+                anchors.margins: Tokens.padding.normal
+                spacing: Tokens.spacing.normal
 
                 // Monitor icon badge
                 StyledRect {
                     implicitWidth: implicitHeight
-                    implicitHeight: monIcon.implicitHeight + Appearance.padding.normal * 2
-                    radius: Appearance.rounding.normal
+                    implicitHeight: monIcon.implicitHeight + Tokens.padding.normal * 2
+                    radius: Tokens.rounding.normal
                     color: listItem.active
                         ? Colours.palette.m3primaryContainer
                         : Colours.tPalette.m3surfaceContainerHigh
@@ -202,7 +250,7 @@ Item {
                         id: monIcon
                         anchors.centerIn: parent
                         text: "monitor"
-                        font.pointSize: Appearance.font.size.large
+                        font.pointSize: Tokens.font.size.large
                         fill: listItem.active ? 1 : 0
                         color: listItem.active
                             ? Colours.palette.m3onPrimaryContainer
@@ -226,7 +274,7 @@ Item {
                     StyledText {
                         Layout.fillWidth: true
                         elide: Text.ElideRight
-                        font.pointSize: Appearance.font.size.small
+                        font.pointSize: Tokens.font.size.small
                         color: Colours.palette.m3outline
                         text: {
                             const m = listItem.monitor;
@@ -240,16 +288,16 @@ Item {
                 // Focused badge
                 StyledRect {
                     visible: listItem.monitor?.focused ?? false
-                    implicitWidth: focusedLabel.implicitWidth + Appearance.padding.normal * 2
-                    implicitHeight: focusedLabel.implicitHeight + Appearance.padding.small * 2
-                    radius: Appearance.rounding.full
+                    implicitWidth: focusedLabel.implicitWidth + Tokens.padding.normal * 2
+                    implicitHeight: focusedLabel.implicitHeight + Tokens.padding.small * 2
+                    radius: Tokens.rounding.full
                     color: Qt.alpha(Colours.palette.m3primaryContainer, 0.9)
 
                     StyledText {
                         id: focusedLabel
                         anchors.centerIn: parent
                         text: qsTr("Active")
-                        font.pointSize: Appearance.font.size.small
+                        font.pointSize: Tokens.font.size.small
                         color: Colours.palette.m3onPrimaryContainer
                     }
                 }
@@ -284,7 +332,7 @@ Item {
 
                 anchors.left: parent.left
                 anchors.right: parent.right
-                spacing: Appearance.spacing.normal
+                spacing: Tokens.spacing.normal
 
                 SettingsHeader {
                     icon: "monitor"
@@ -297,10 +345,10 @@ Item {
                 }
 
                 SectionContainer {
-                    contentSpacing: Appearance.spacing.small
+                    contentSpacing: Tokens.spacing.small
 
                     Repeater {
-                        model: Hyprland.monitors
+                        model: root.monitorModel
 
                         delegate: PropertyRow {
                             required property var modelData
@@ -329,15 +377,15 @@ Item {
                 }
 
                 SectionContainer {
-                    contentSpacing: Appearance.spacing.normal
+                    contentSpacing: Tokens.spacing.normal
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: Appearance.spacing.normal
+                        spacing: Tokens.spacing.normal
 
                         MaterialIcon {
                             text: "tv_signin"
-                            font.pointSize: Appearance.font.size.large
+                            font.pointSize: Tokens.font.size.large
                             color: Colours.palette.m3onSurfaceVariant
                         }
 
@@ -346,12 +394,12 @@ Item {
                             spacing: 0
                             StyledText {
                                 text: qsTr("Identify displays")
-                                font.pointSize: Appearance.font.size.normal
+                                font.pointSize: Tokens.font.size.normal
                             }
                             StyledText {
                                 text: qsTr("Show monitor IDs on each screen")
                                 color: Colours.palette.m3outline
-                                font.pointSize: Appearance.font.size.small
+                                font.pointSize: Tokens.font.size.small
                             }
                         }
 
@@ -381,7 +429,7 @@ Item {
                 flickable: detailFlickable
             }
 
-            readonly property var mon: root.session.monitor.active
+            readonly property var mon: root.selectedMonitor()
             readonly property var brightnessMon: mon ? Brightness.getMonitor(mon.name) : null
 
             ColumnLayout {
@@ -389,7 +437,7 @@ Item {
 
                 anchors.left: parent.left
                 anchors.right: parent.right
-                spacing: Appearance.spacing.normal
+                spacing: Tokens.spacing.normal
 
                 // ── Header ──────────────────────────────────────────
                 ConnectionHeader {
@@ -402,7 +450,7 @@ Item {
                     Layout.fillWidth: true
                     visible: detailFlickable.brightnessMon !== null
                         && detailFlickable.brightnessMon !== undefined
-                    spacing: Appearance.spacing.normal
+                    spacing: Tokens.spacing.normal
 
                     SectionHeader {
                         title: qsTr("Brightness")
@@ -410,22 +458,22 @@ Item {
                     }
 
                     SectionContainer {
-                        contentSpacing: Appearance.spacing.normal
+                        contentSpacing: Tokens.spacing.normal
 
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.normal
+                            spacing: Tokens.spacing.normal
 
                             MaterialIcon {
                                 text: (detailFlickable.brightnessMon?.brightness ?? 0) > 0.5
                                     ? "brightness_high" : "brightness_low"
-                                font.pointSize: Appearance.font.size.normal
+                                font.pointSize: Tokens.font.size.normal
                                 color: Colours.palette.m3onSurfaceVariant
                             }
 
                             StyledSlider {
                                 Layout.fillWidth: true
-                                implicitHeight: Appearance.padding.normal * 3
+                                implicitHeight: Tokens.padding.normal * 3
                                 from: 0; to: 1; stepSize: 0.01
                                 value: detailFlickable.brightnessMon?.brightness ?? 0
                                 onMoved: detailFlickable.brightnessMon?.setBrightness(value)
@@ -435,8 +483,87 @@ Item {
                                 text: qsTr("%1%").arg(
                                     Math.round((detailFlickable.brightnessMon?.brightness ?? 0) * 100))
                                 Layout.preferredWidth: 38
-                                font.pointSize: Appearance.font.size.small
+                                font.pointSize: Tokens.font.size.small
                                 color: Colours.palette.m3outline
+                            }
+                        }
+                    }
+                }
+
+                // ── Refresh rate ─────────────────────────────────────
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: Tokens.spacing.normal
+
+                    SectionHeader {
+                        title: qsTr("Refresh rate")
+                        description: qsTr("Set the display refresh rate")
+                    }
+
+                    SectionContainer {
+                        contentSpacing: Tokens.spacing.normal
+
+                        SpinBoxRow {
+                            Layout.fillWidth: true
+                            label: qsTr("Refresh rate")
+                            value: detailFlickable.mon?.refreshRate ?? 60
+                            min: 10
+                            max: 1000
+                            step: 0.01
+                            onValueModified: value => {
+                                if (detailFlickable.mon)
+                                    Monitors.setRefreshRate(detailFlickable.mon.name, value);
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: (detailFlickable.mon?.availableModes?.length ?? 0) > 0
+                            spacing: Tokens.spacing.small
+
+                            Repeater {
+                                model: detailFlickable.mon?.availableModes ?? []
+
+                                delegate: StyledRect {
+                                    required property string modelData
+                                    required property int index
+
+                                    Layout.fillWidth: true
+                                    implicitHeight: modeLabel.implicitHeight + Tokens.padding.normal * 2
+                                    radius: Tokens.rounding.full
+
+                                    readonly property real modeRate: {
+                                        const match = modelData.match(/@(\d+(?:\.\d+)?)Hz/);
+                                        return match ? parseFloat(match[1]) : 0;
+                                    }
+                                    readonly property bool isActive: Math.abs((detailFlickable.mon?.refreshRate ?? 0) - modeRate) < 0.1
+
+                                    color: isActive
+                                        ? Colours.palette.m3secondaryContainer
+                                        : Qt.alpha(Colours.palette.m3surfaceVariant, 0.5)
+
+                                    StateLayer {
+                                        color: parent.isActive
+                                            ? Colours.palette.m3onSecondaryContainer
+                                            : Colours.palette.m3onSurfaceVariant
+                                        onClicked: {
+                                            if (detailFlickable.mon && parent.modeRate > 0)
+                                                Monitors.setRefreshRate(detailFlickable.mon.name, parent.modeRate);
+                                        }
+                                    }
+
+                                    StyledText {
+                                        id: modeLabel
+                                        anchors.centerIn: parent
+                                        text: modelData
+                                        font.pointSize: Tokens.font.size.small
+                                        color: parent.isActive
+                                            ? Colours.palette.m3onSecondaryContainer
+                                            : Colours.palette.m3onSurfaceVariant
+                                    }
+
+                                    Behavior on color { CAnim {} }
+                                }
                             }
                         }
                     }
@@ -445,7 +572,7 @@ Item {
                 // ── Rotation ─────────────────────────────────────────
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: Appearance.spacing.normal
+                    spacing: Tokens.spacing.normal
 
                     SectionHeader {
                         title: qsTr("Rotation")
@@ -453,11 +580,11 @@ Item {
                     }
 
                     SectionContainer {
-                        contentSpacing: Appearance.spacing.small
+                        contentSpacing: Tokens.spacing.small
 
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
+                            spacing: Tokens.spacing.small
 
                             Repeater {
                                 model: [
@@ -488,7 +615,7 @@ Item {
                 // ── Scale ────────────────────────────────────────────
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: Appearance.spacing.normal
+                    spacing: Tokens.spacing.normal
 
                     SectionHeader {
                         title: qsTr("Scale")
@@ -496,22 +623,22 @@ Item {
                     }
 
                     SectionContainer {
-                        contentSpacing: Appearance.spacing.normal
+                        contentSpacing: Tokens.spacing.normal
 
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.normal
+                            spacing: Tokens.spacing.normal
 
                             MaterialIcon {
                                 text: "zoom_in"
-                                font.pointSize: Appearance.font.size.normal
+                                font.pointSize: Tokens.font.size.normal
                                 color: Colours.palette.m3onSurfaceVariant
                             }
 
                             StyledSlider {
                                 id: scaleSlider
                                 Layout.fillWidth: true
-                                implicitHeight: Appearance.padding.normal * 3
+                                implicitHeight: Tokens.padding.normal * 3
                                 from: 0.5; to: 3.0; stepSize: 0.25
                                 value: detailFlickable.mon?.scale ?? 1
 
@@ -524,7 +651,7 @@ Item {
                             StyledText {
                                 text: qsTr("×%1").arg((detailFlickable.mon?.scale ?? 1).toFixed(2))
                                 Layout.preferredWidth: 42
-                                font.pointSize: Appearance.font.size.small
+                                font.pointSize: Tokens.font.size.small
                                 color: Colours.palette.m3outline
                             }
                         }
@@ -532,7 +659,7 @@ Item {
                         // Quick-pick chips: 1×, 1.25×, 1.5×, 2×
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
+                            spacing: Tokens.spacing.small
 
                             Repeater {
                                 model: [1.0, 1.25, 1.5, 2.0]
@@ -542,8 +669,8 @@ Item {
                                     required property int index
 
                                     Layout.fillWidth: true
-                                    implicitHeight: scaleChipLabel.implicitHeight + Appearance.padding.normal * 2
-                                    radius: Appearance.rounding.full
+                                    implicitHeight: scaleChipLabel.implicitHeight + Tokens.padding.normal * 2
+                                    radius: Tokens.rounding.full
 
                                     readonly property bool isActive:
                                         Math.abs((detailFlickable.mon?.scale ?? 1) - modelData) < 0.01
@@ -566,7 +693,7 @@ Item {
                                         id: scaleChipLabel
                                         anchors.centerIn: parent
                                         text: qsTr("×%1").arg(modelData.toFixed(2))
-                                        font.pointSize: Appearance.font.size.small
+                                        font.pointSize: Tokens.font.size.small
                                         color: parent.isActive
                                             ? Colours.palette.m3onSecondaryContainer
                                             : Colours.palette.m3onSurfaceVariant
@@ -582,8 +709,8 @@ Item {
                 // ── Arrangement ──────────────────────────────────────
                 ColumnLayout {
                     Layout.fillWidth: true
-                    visible: Hyprland.monitors.length > 1
-                    spacing: Appearance.spacing.normal
+                    visible: root.monitorModel.length > 1
+                    spacing: Tokens.spacing.normal
 
                     SectionHeader {
                         title: qsTr("Arrangement")
@@ -592,14 +719,16 @@ Item {
 
                     // One card per OTHER monitor — use visible to skip self
                     Repeater {
-                        model: Hyprland.monitors
+                        model: root.monitorModel
 
                         delegate: SectionContainer {
+                            id: targetSection
+
                             required property var modelData
                             required property int index
 
                             Layout.fillWidth: true
-                            contentSpacing: Appearance.spacing.small
+                            contentSpacing: Tokens.spacing.small
 
                             // Hide the current monitor's own entry without JS filter
                             visible: detailFlickable.mon !== null
@@ -609,11 +738,11 @@ Item {
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
+                                spacing: Tokens.spacing.small
 
                                 MaterialIcon {
                                     text: "tv"
-                                    font.pointSize: Appearance.font.size.normal
+                                    font.pointSize: Tokens.font.size.normal
                                     color: Colours.palette.m3onSurfaceVariant
                                 }
 
@@ -622,15 +751,15 @@ Item {
                                     text: qsTr("Relative to Monitor %1 (%2)")
                                         .arg(modelData.id ?? 0)
                                         .arg(modelData.name ?? "")
-                                    font.pointSize: Appearance.font.size.normal
+                                    font.pointSize: Tokens.font.size.normal
                                 }
                             }
 
                             GridLayout {
                                 Layout.fillWidth: true
                                 columns: 4
-                                columnSpacing: Appearance.spacing.small
-                                rowSpacing: Appearance.spacing.small
+                                columnSpacing: Tokens.spacing.small
+                                rowSpacing: Tokens.spacing.small
 
                                 Repeater {
                                     model: [
@@ -652,7 +781,7 @@ Item {
                                                 Monitors.arrange(
                                                     detailFlickable.mon.name,
                                                     modelData.pos,
-                                                    parent.parent.parent.modelData.id
+                                                    targetSection.modelData.id
                                                 );
                                         }
                                     }
@@ -665,7 +794,7 @@ Item {
                 // ── Display information ───────────────────────────────
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: Appearance.spacing.normal
+                    spacing: Tokens.spacing.normal
 
                     SectionHeader {
                         title: qsTr("Display information")
@@ -673,7 +802,7 @@ Item {
                     }
 
                     SectionContainer {
-                        contentSpacing: Appearance.spacing.small / 2
+                        contentSpacing: Tokens.spacing.small / 2
 
                         PropertyRow {
                             label: qsTr("Name")
@@ -756,11 +885,11 @@ Item {
         required property bool isActive
         signal clicked()
 
-        implicitHeight: chipContent.implicitHeight + Appearance.padding.normal * 2
+        implicitHeight: chipContent.implicitHeight + Tokens.padding.normal * 2
 
         StyledRect {
             anchors.fill: parent
-            radius: Appearance.rounding.full
+            radius: Tokens.rounding.full
             color: chip.isActive
                 ? Colours.palette.m3secondaryContainer
                 : Qt.alpha(Colours.palette.m3surfaceVariant, 0.5)
@@ -781,7 +910,7 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     text: "screen_rotation"
                     rotation: chip.chipAngle
-                    font.pointSize: Appearance.font.size.normal
+                    font.pointSize: Tokens.font.size.normal
                     color: chip.isActive
                         ? Colours.palette.m3onSecondaryContainer
                         : Colours.palette.m3onSurfaceVariant
@@ -791,7 +920,7 @@ Item {
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: chip.chipLabel
-                    font.pointSize: Appearance.font.size.small
+                    font.pointSize: Tokens.font.size.small
                     color: chip.isActive
                         ? Colours.palette.m3onSecondaryContainer
                         : Colours.palette.m3onSurfaceVariant
@@ -808,11 +937,11 @@ Item {
         required property string btnLabel
         signal clicked()
 
-        implicitHeight: btnContent.implicitHeight + Appearance.padding.normal * 2
+        implicitHeight: btnContent.implicitHeight + Tokens.padding.normal * 2
 
         StyledRect {
             anchors.fill: parent
-            radius: Appearance.rounding.normal
+            radius: Tokens.rounding.normal
             color: Qt.alpha(Colours.palette.m3surfaceVariant, 0.5)
 
             StateLayer {
@@ -828,14 +957,14 @@ Item {
                 MaterialIcon {
                     Layout.alignment: Qt.AlignHCenter
                     text: arrangeBtn.btnIcon
-                    font.pointSize: Appearance.font.size.normal
+                    font.pointSize: Tokens.font.size.normal
                     color: Colours.palette.m3onSurfaceVariant
                 }
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: arrangeBtn.btnLabel
-                    font.pointSize: Appearance.font.size.small
+                    font.pointSize: Tokens.font.size.small
                     color: Colours.palette.m3onSurfaceVariant
                 }
             }

@@ -1,20 +1,19 @@
+import "dash"
+import QtQuick.Layouts
+import Caelestia.Config
 import qs.components
 import qs.components.filedialog
 import qs.services
-import qs.config
-import "dash"
-import Quickshell
-import QtQuick.Layouts
 
 GridLayout {
     id: root
 
-    required property PersistentProperties visibilities
-    required property PersistentProperties state
+    required property DrawerVisibilities visibilities
+    required property DashboardState dashState
     required property FileDialog facePicker
 
-    rowSpacing: Appearance.spacing.normal
-    columnSpacing: Appearance.spacing.normal
+    rowSpacing: Tokens.spacing.normal
+    columnSpacing: Tokens.spacing.normal
 
     Rect {
         Layout.column: 2
@@ -22,13 +21,12 @@ GridLayout {
         Layout.preferredWidth: user.implicitWidth
         Layout.preferredHeight: user.implicitHeight
 
-        radius: Appearance.rounding.large
+        radius: Tokens.rounding.large
 
         User {
             id: user
 
             visibilities: root.visibilities
-            state: root.state
             facePicker: root.facePicker
         }
     }
@@ -36,12 +34,12 @@ GridLayout {
     Rect {
         Layout.row: 0
         Layout.columnSpan: 2
-        Layout.preferredWidth: Config.dashboard.sizes.weatherWidth
+        Layout.preferredWidth: Tokens.sizes.dashboard.weatherWidth
         Layout.fillHeight: true
 
-        radius: Appearance.rounding.large * 1.5
+        radius: Tokens.rounding.large * 1.5
 
-        Weather {}
+        SmallWeather {}
     }
 
     Rect {
@@ -49,7 +47,7 @@ GridLayout {
         Layout.preferredWidth: dateTime.implicitWidth
         Layout.fillHeight: true
 
-        radius: Appearance.rounding.normal
+        radius: Tokens.rounding.normal
 
         DateTime {
             id: dateTime
@@ -63,12 +61,12 @@ GridLayout {
         Layout.fillWidth: true
         Layout.preferredHeight: calendar.implicitHeight
 
-        radius: Appearance.rounding.large
+        radius: Tokens.rounding.large
 
         Calendar {
             id: calendar
 
-            state: root.state
+            dashState: root.dashState
         }
     }
 
@@ -78,7 +76,7 @@ GridLayout {
         Layout.preferredWidth: resources.implicitWidth
         Layout.fillHeight: true
 
-        radius: Appearance.rounding.normal
+        radius: Tokens.rounding.normal
 
         Resources {
             id: resources
@@ -92,7 +90,7 @@ GridLayout {
         Layout.preferredWidth: media.implicitWidth
         Layout.fillHeight: true
 
-        radius: Appearance.rounding.large * 2
+        radius: Tokens.rounding.large * 2
 
         Media {
             id: media

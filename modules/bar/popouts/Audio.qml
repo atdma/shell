@@ -1,23 +1,21 @@
 pragma ComponentBehavior: Bound
 
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import Quickshell.Services.Pipewire
+import Caelestia.Config
 import qs.components
 import qs.components.controls
 import qs.services
-import qs.config
-import Quickshell
-import Quickshell.Services.Pipewire
-import QtQuick
-import QtQuick.Layouts
-import QtQuick.Controls
-import "../../controlcenter/network"
 
 Item {
     id: root
 
-    required property var wrapper
+    required property PopoutState popouts
 
-    implicitWidth: layout.implicitWidth + Appearance.padding.normal * 2
-    implicitHeight: layout.implicitHeight + Appearance.padding.normal * 2
+    implicitWidth: layout.implicitWidth + Tokens.padding.normal * 2
+    implicitHeight: layout.implicitHeight + Tokens.padding.normal * 2
 
     ButtonGroup {
         id: sinks
@@ -32,7 +30,7 @@ Item {
 
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
-        spacing: Appearance.spacing.normal
+        spacing: Tokens.spacing.normal
 
         StyledText {
             text: qsTr("Output device")
@@ -55,7 +53,7 @@ Item {
         }
 
         StyledText {
-            Layout.topMargin: Appearance.spacing.smaller
+            Layout.topMargin: Tokens.spacing.smaller
             text: qsTr("Input device")
             font.weight: 500
         }
@@ -74,15 +72,15 @@ Item {
         }
 
         StyledText {
-            Layout.topMargin: Appearance.spacing.smaller
-            Layout.bottomMargin: -Appearance.spacing.small / 2
+            Layout.topMargin: Tokens.spacing.smaller
+            Layout.bottomMargin: -Tokens.spacing.small / 2
             text: qsTr("Volume (%1)").arg(Audio.muted ? qsTr("Muted") : `${Math.round(Audio.volume * 100)}%`)
             font.weight: 500
         }
 
         CustomMouseArea {
             Layout.fillWidth: true
-            implicitHeight: Appearance.padding.normal * 3
+            implicitHeight: Tokens.padding.normal * 3
 
             onWheel: event => {
                 if (event.angleDelta.y > 0)
@@ -107,14 +105,14 @@ Item {
 
         IconTextButton {
             Layout.fillWidth: true
-            Layout.topMargin: Appearance.spacing.normal
+            Layout.topMargin: Tokens.spacing.normal
             inactiveColour: Colours.palette.m3primaryContainer
             inactiveOnColour: Colours.palette.m3onPrimaryContainer
-            verticalPadding: Appearance.padding.small
+            verticalPadding: Tokens.padding.small
             text: qsTr("Open settings")
             icon: "settings"
 
-            onClicked: root.wrapper.detach("audio")
+            onClicked: root.popouts.detachRequested("audio")
         }
     }
 }

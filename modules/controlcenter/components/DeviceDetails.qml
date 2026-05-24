@@ -1,13 +1,13 @@
 pragma ComponentBehavior: Bound
 
 import ".."
-import qs.components
-import qs.components.controls
-import qs.components.effects
-import qs.components.containers
-import qs.config
 import QtQuick
 import QtQuick.Layouts
+import Caelestia.Config
+import qs.components
+import qs.components.containers
+import qs.components.controls
+import qs.components.effects
 
 Item {
     id: root
@@ -30,12 +30,13 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        spacing: Appearance.spacing.normal
+        spacing: Tokens.spacing.normal
 
         Loader {
             id: headerLoader
 
             Layout.fillWidth: true
+            asynchronous: true
             sourceComponent: root.headerComponent
             visible: root.headerComponent !== null
         }
@@ -44,6 +45,7 @@ Item {
             id: topContentLoader
 
             Layout.fillWidth: true
+            asynchronous: true
             sourceComponent: root.topContent
             visible: root.topContent !== null
         }
@@ -55,6 +57,7 @@ Item {
                 required property Component modelData
 
                 Layout.fillWidth: true
+                asynchronous: true
                 sourceComponent: modelData
             }
         }
@@ -63,6 +66,7 @@ Item {
             id: bottomContentLoader
 
             Layout.fillWidth: true
+            asynchronous: true
             sourceComponent: root.bottomContent
             visible: root.bottomContent !== null
         }

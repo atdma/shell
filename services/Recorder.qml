@@ -1,54 +1,66 @@
 pragma Singleton
 
+import QtQuick
 import Quickshell
 import Quickshell.Io
-import QtQuick
 
 Singleton {
     id: root
 
     readonly property alias running: props.running
+    readonly property alias starting: props.starting
     readonly property alias paused: props.paused
     readonly property alias elapsed: props.elapsed
+    readonly property alias videoMode: props.videoMode
+    readonly property alias audioMode: props.audioMode
+    property int startChecks: 0
+    readonly property int maxStartChecks: 30
 
     signal errorOccurred(string errorMsg)
     signal recordingStarted()
     signal recordingStopped()
 
     function start(videoMode: string, audioMode: string): bool {
-        if (props.running) {
+        if (props.running || props.starting) {
             console.warn("Recording already running");
             errorOccurred("Recording already in progress");
             return false;
         }
 
-        // Build command array
-        const args = ["caelestia", "record", "--mode", videoMode];
+        const requestedVideoMode = videoMode || "fullscreen";
+        const requestedAudioMode = audioMode || "none";
 
-        if (audioMode) {
-            args.push("--audio", audioMode);
+        // Build command array
+        const args = ["caelestia", "record", "--mode", requestedVideoMode];
+
+        if (requestedAudioMode) {
+            args.push("--audio", requestedAudioMode);
         }
 
         console.log("Executing:", args.join(" "));
 
         try {
             Quickshell.execDetached(args);
-            props.running = true;
+            props.starting = true;
+            props.running = false;
             props.paused = false;
             props.elapsed = 0;
+            props.videoMode = requestedVideoMode;
+            props.audioMode = requestedAudioMode;
+            root.startChecks = 0;
             verifyTimer.restart();
-            recordingStarted();
             return true;
         } catch (error) {
             console.error("Failed to start recording:", error);
             errorOccurred("Failed to execute recording command: " + error);
+            props.starting = false;
             props.running = false;
             return false;
         }
     }
 
     function stop(): void {
-        if (!props.running) {
+        if (!props.running && !props.starting) {
             console.warn("No recording to stop");
             return;
         }
@@ -57,12 +69,21 @@ Singleton {
 
         try {
             Quickshell.execDetached(["caelestia", "record", "--stop"]);
+            if (props.starting) {
+                props.starting = false;
+                props.running = false;
+                props.paused = false;
+                props.elapsed = 0;
+                recordingStopped();
+                return;
+            }
             // Don't immediately set running to false - wait for process to confirm
             stopVerifyTimer.restart();
         } catch (error) {
             console.error("Failed to stop recording:", error);
             errorOccurred("Failed to stop recording: " + error);
             // Force state reset on error
+            props.starting = false;
             props.running = false;
             props.paused = false;
             props.elapsed = 0;
@@ -71,7 +92,7 @@ Singleton {
     }
 
     function togglePause(): void {
-        if (!props.running) {
+        if (!props.running || props.starting) {
             console.warn("No recording to pause");
             return;
         }
@@ -96,8 +117,11 @@ Singleton {
         id: props
 
         property bool running: false
+        property bool starting: false
         property bool paused: false
         property real elapsed: 0
+        property string videoMode: "fullscreen"
+        property string audioMode: "none"
 
         reloadableId: "recorder"
     }
@@ -116,6 +140,7 @@ Singleton {
             // Detect unexpected stop
             if (wasRunning && !isRunning) {
                 console.warn("Recording process stopped unexpectedly");
+                props.starting = false;
                 props.running = false;
                 props.paused = false;
                 props.elapsed = 0;
@@ -132,7 +157,7 @@ Singleton {
     // Verification timer after start
     Timer {
         id: verifyTimer
-        interval: 1500
+        interval: 1000
         repeat: false
         onTriggered: {
             console.log("Verifying recording started");
@@ -161,9 +186,26 @@ Singleton {
         onExited: code => {
             const isRunning = code === 0;
 
-            if (!isRunning && props.running) {
+            if (isRunning && props.starting) {
+                console.log("Recording verified running");
+                props.starting = false;
+                props.running = true;
+                props.paused = false;
+                recordingStarted();
+                statusCheckTimer.restart();
+                return;
+            }
+
+            if (!isRunning && props.starting) {
+                root.startChecks++;
+                if (root.startChecks < root.maxStartChecks) {
+                    verifyTimer.restart();
+                    return;
+                }
+
                 console.error("Recording process failed to start");
-                errorOccurred("Recording process failed to start");
+                errorOccurred("Recording did not start");
+                props.starting = false;
                 props.running = false;
                 props.paused = false;
                 props.elapsed = 0;
@@ -186,6 +228,7 @@ Singleton {
 
             if (!isRunning) {
                 console.log("Recording stopped successfully");
+                props.starting = false;
                 props.running = false;
                 props.paused = false;
                 props.elapsed = 0;
@@ -240,10 +283,12 @@ Singleton {
         onExited: code => {
             if (code === 0) {
                 console.log("Found existing recording process");
+                props.starting = false;
                 props.running = true;
                 statusCheckTimer.restart();
             } else {
                 console.log("No existing recording process");
+                props.starting = false;
                 props.running = false;
                 props.paused = false;
                 props.elapsed = 0;

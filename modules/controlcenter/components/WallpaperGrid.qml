@@ -1,25 +1,25 @@
 pragma ComponentBehavior: Bound
 
 import ".."
+import QtQuick
+import Caelestia.Config
+import Caelestia.Models
 import qs.components
 import qs.components.controls
 import qs.components.effects
 import qs.components.images
 import qs.services
-import qs.config
-import Caelestia.Models
-import QtQuick
 
 GridView {
     id: root
 
     required property Session session
 
-    readonly property int minCellWidth: 200 + Appearance.spacing.normal
+    readonly property int minCellWidth: 200 + Tokens.spacing.normal
     readonly property int columnsCount: Math.max(1, Math.floor(width / minCellWidth))
 
     cellWidth: width / columnsCount
-    cellHeight: 140 + Appearance.spacing.normal
+    cellHeight: 140 + Tokens.spacing.normal
 
     model: Wallpapers.list
 
@@ -32,25 +32,24 @@ GridView {
     delegate: Item {
         required property var modelData
         required property int index
+        readonly property bool isCurrent: modelData && modelData.path === Wallpapers.actualCurrent
+        readonly property real itemMargin: Tokens.spacing.normal / 2
+        readonly property real itemRadius: Tokens.rounding.normal
 
         width: root.cellWidth
         height: root.cellHeight
 
-        readonly property bool isCurrent: modelData && modelData.path === Wallpapers.actualCurrent
-        readonly property real itemMargin: Appearance.spacing.normal / 2
-        readonly property real itemRadius: Appearance.rounding.normal
-
         StateLayer {
+            onClicked: {
+                Wallpapers.setWallpaper(modelData.path);
+            }
+
             anchors.fill: parent
             anchors.leftMargin: itemMargin
             anchors.rightMargin: itemMargin
             anchors.topMargin: itemMargin
             anchors.bottomMargin: itemMargin
             radius: itemRadius
-
-            function onClicked(): void {
-                Wallpapers.setWallpaper(modelData.path);
-            }
         }
 
         StyledClippingRect {
@@ -117,6 +116,7 @@ GridView {
                 id: fallbackTimer
 
                 property bool triggered: false
+
                 interval: 800
                 running: cachingImage.status === Image.Loading || cachingImage.status === Image.Null
                 onTriggered: triggered = true
@@ -130,7 +130,7 @@ GridView {
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
 
-                implicitHeight: filenameText.implicitHeight + Appearance.padding.normal * 1.5
+                implicitHeight: filenameText.implicitHeight + Tokens.padding.normal * 1.5
                 radius: 0
 
                 gradient: Gradient {
@@ -154,15 +154,15 @@ GridView {
 
                 opacity: 0
 
+                Component.onCompleted: {
+                    opacity = 1;
+                }
+
                 Behavior on opacity {
                     NumberAnimation {
                         duration: 1000
                         easing.type: Easing.OutCubic
                     }
-                }
-
-                Component.onCompleted: {
-                    opacity = 1;
                 }
             }
         }
@@ -190,26 +190,27 @@ GridView {
             MaterialIcon {
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: Appearance.padding.small
+                anchors.margins: Tokens.padding.small
 
                 visible: isCurrent
                 text: "check_circle"
                 color: Colours.palette.m3primary
-                font.pointSize: Appearance.font.size.large
+                font.pointSize: Tokens.font.size.large
             }
         }
 
         StyledText {
             id: filenameText
+
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.bottom: parent.bottom
-            anchors.leftMargin: Appearance.padding.normal + Appearance.spacing.normal / 2
-            anchors.rightMargin: Appearance.padding.normal + Appearance.spacing.normal / 2
-            anchors.bottomMargin: Appearance.padding.normal
+            anchors.leftMargin: Tokens.padding.normal + Tokens.spacing.normal / 2
+            anchors.rightMargin: Tokens.padding.normal + Tokens.spacing.normal / 2
+            anchors.bottomMargin: Tokens.padding.normal
 
             text: modelData.name
-            font.pointSize: Appearance.font.size.smaller
+            font.pointSize: Tokens.font.size.smaller
             font.weight: 500
             color: isCurrent ? Colours.palette.m3primary : Colours.palette.m3onSurface
             elide: Text.ElideMiddle
@@ -218,15 +219,15 @@ GridView {
 
             opacity: 0
 
+            Component.onCompleted: {
+                opacity = 1;
+            }
+
             Behavior on opacity {
                 NumberAnimation {
                     duration: 1000
                     easing.type: Easing.OutCubic
                 }
-            }
-
-            Component.onCompleted: {
-                opacity = 1;
             }
         }
     }

@@ -29,29 +29,37 @@ Singleton {
         identifyTimer.stop();
     }
 
-    // Safely iterate UntypedObjectModel — .find() doesn't work on it
+    function sourceMonitors(): var {
+        if ((Hyprctl.monitors?.length ?? 0) > 0)
+            return Hyprctl.monitors;
+        return Hypr.monitors.values ?? [];
+    }
+
+    // Safely iterate monitor data — .find() doesn't work on UntypedObjectModel
     function findMonitorByName(name: string): var {
-        for (let i = 0; i < Hypr.monitors.length; i++) {
-            if (Hypr.monitors[i].name === name)
-                return Hypr.monitors[i];
+        const monitors = sourceMonitors();
+        for (let i = 0; i < monitors.length; i++) {
+            if (monitors[i].name === name)
+                return monitors[i];
         }
         return null;
     }
 
     function findMonitorById(id: int): var {
-        for (let i = 0; i < Hypr.monitors.length; i++) {
-            if (Hypr.monitors[i].id === id)
-                return Hypr.monitors[i];
+        const monitors = sourceMonitors();
+        for (let i = 0; i < monitors.length; i++) {
+            if (monitors[i].id === id)
+                return monitors[i];
         }
         return null;
     }
 
     // Build the monitor string Hyprland expects:
     // NAME,WIDTHxHEIGHT@RATE,XxY,SCALE[,transform,N]
-    function monitorStr(mon: var, overrideScale: real, overrideTransform: int): string {
-        const scale     = overrideScale     >= 0 ? overrideScale     : (mon.scale     || 1);
+    function monitorStr(mon: var, overrideScale: real, overrideTransform: int, overrideRefreshRate: real): string {
+        const scale = overrideScale >= 0 ? overrideScale : (mon.scale || 1);
         const transform = overrideTransform >= 0 ? overrideTransform : (mon.transform || 0);
-        const rr = (mon.refreshRate || 60).toFixed(3);
+        const rr = (overrideRefreshRate > 0 ? overrideRefreshRate : (mon.refreshRate || 60)).toFixed(3);
         let s = `${mon.name},${mon.width}x${mon.height}@${rr},${mon.x}x${mon.y},${scale}`;
         if (transform !== 0)
             s += `,transform,${transform}`;
@@ -62,6 +70,7 @@ Singleton {
     // "keyword" is a config command, not a dispatcher action.
     function sendKeyword(monStr: string): void {
         Hypr.extras.batchMessage([`keyword monitor ${monStr}`]);
+        Hyprctl.update();
     }
 
     function arrange(monitorName: string, pos: string, relativeToId: int): void {
@@ -82,7 +91,7 @@ Singleton {
         else if (pos === "top")    y -= movingH;
         else if (pos === "bottom") y += targetH;
 
-        sendKeyword(monitorStr(moving, moving.scale || 1, moving.transform || 0)
+        sendKeyword(monitorStr(moving, moving.scale || 1, moving.transform || 0, moving.refreshRate || 60)
             .replace(`${moving.x}x${moving.y}`, `${Math.round(x)}x${Math.round(y)}`));
     }
 
@@ -95,13 +104,19 @@ Singleton {
         else if (angle === 180) transform = 2;
         else if (angle === 270) transform = 3;
 
-        sendKeyword(monitorStr(mon, mon.scale || 1, transform));
+        sendKeyword(monitorStr(mon, mon.scale || 1, transform, mon.refreshRate || 60));
     }
 
     function setScale(monitorName: string, scale: real): void {
         const mon = findMonitorByName(monitorName);
         if (!mon) return;
         const s = Math.max(0.5, Math.min(3.0, scale));
-        sendKeyword(monitorStr(mon, s, mon.transform || 0));
+        sendKeyword(monitorStr(mon, s, mon.transform || 0, mon.refreshRate || 60));
+    }
+
+    function setRefreshRate(monitorName: string, refreshRate: real): void {
+        const mon = findMonitorByName(monitorName);
+        if (!mon) return;
+        sendKeyword(monitorStr(mon, mon.scale || 1, mon.transform || 0, Math.max(1, refreshRate)));
     }
 }

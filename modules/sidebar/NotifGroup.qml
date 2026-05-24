@@ -1,14 +1,14 @@
 pragma ComponentBehavior: Bound
 
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+import Quickshell.Services.Notifications
+import Caelestia.Config
 import qs.components
 import qs.components.effects
 import qs.services
-import qs.config
 import qs.utils
-import Quickshell
-import Quickshell.Services.Notifications
-import QtQuick
-import QtQuick.Layouts
 
 StyledRect {
     id: root
@@ -16,18 +16,25 @@ StyledRect {
     required property string modelData
     required property Props props
     required property Flickable container
-    required property var visibilities
+    required property DrawerVisibilities visibilities
 
     readonly property list<var> notifs: Notifs.list.filter(n => n.appName === modelData)
-    readonly property int notifCount: notifs.reduce((acc, n) => n.closed ? acc : acc + 1, 0)
-    readonly property string image: notifs.find(n => !n.closed && n.image.length > 0)?.image ?? ""
-    readonly property string appIcon: notifs.find(n => !n.closed && n.appIcon.length > 0)?.appIcon ?? ""
-    readonly property int urgency: notifs.some(n => !n.closed && n.urgency === NotificationUrgency.Critical) ? NotificationUrgency.Critical : notifs.some(n => n.urgency === NotificationUrgency.Normal) ? NotificationUrgency.Normal : NotificationUrgency.Low
+    readonly property list<var> activeNotifs: notifs.filter(n => !n.closed)
+    readonly property int notifCount: activeNotifs.length
+    readonly property string image: activeNotifs.find(n => n.image.length > 0)?.image ?? ""
+    readonly property string appIcon: activeNotifs.find(n => n.appIcon.length > 0)?.appIcon ?? ""
+    readonly property int urgency: {
+        if (activeNotifs.find(n => n.urgency === NotificationUrgency.Critical))
+            return NotificationUrgency.Critical;
+        if (activeNotifs.find(n => n.urgency === NotificationUrgency.Normal))
+            return NotificationUrgency.Normal;
+        return NotificationUrgency.Low;
+    }
 
     readonly property int nonAnimHeight: {
-        const headerHeight = header.implicitHeight + (root.expanded ? Math.round(Appearance.spacing.small / 2) : 0);
-        const columnHeight = headerHeight + notifList.nonAnimHeight + column.Layout.topMargin + column.Layout.bottomMargin;
-        return Math.round(Math.max(Config.notifs.sizes.image, columnHeight) + Appearance.padding.normal * 2);
+        const headerHeight = header.implicitHeight + (root.expanded ? Math.round(Tokens.spacing.small / 2) : 0);
+        const columnHeight = headerHeight + notifList.layoutHeight;
+        return Math.round(Math.max(TokenConfig.sizes.notifs.image, columnHeight) + Tokens.padding.normal * 2);
     }
     readonly property bool expanded: props.expandedNotifs.includes(modelData)
 
@@ -47,11 +54,17 @@ StyledRect {
 
     anchors.left: parent?.left
     anchors.right: parent?.right
-    implicitHeight: content.implicitHeight + Appearance.padding.normal * 2
+    implicitHeight: nonAnimHeight
 
     clip: true
-    radius: Appearance.rounding.normal
+    radius: Tokens.rounding.normal
     color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
+
+    Behavior on implicitHeight {
+        Anim {
+            type: Anim.DefaultSpatial
+        }
+    }
 
     RowLayout {
         id: content
@@ -59,14 +72,14 @@ StyledRect {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.margins: Appearance.padding.normal
+        anchors.margins: Tokens.padding.normal
 
-        spacing: Appearance.spacing.normal
+        spacing: Tokens.spacing.normal
 
         Item {
             Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-            implicitWidth: Config.notifs.sizes.image
-            implicitHeight: Config.notifs.sizes.image
+            implicitWidth: TokenConfig.sizes.notifs.image
+            implicitHeight: TokenConfig.sizes.notifs.image
 
             Component {
                 id: imageComp
@@ -74,10 +87,14 @@ StyledRect {
                 Image {
                     source: Qt.resolvedUrl(root.image)
                     fillMode: Image.PreserveAspectCrop
+                    sourceSize: {
+                        const size = TokenConfig.sizes.notifs.image * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1);
+                        return Qt.size(size, size);
+                    }
                     cache: false
                     asynchronous: true
-                    width: Config.notifs.sizes.image
-                    height: Config.notifs.sizes.image
+                    width: TokenConfig.sizes.notifs.image
+                    height: TokenConfig.sizes.notifs.image
                 }
             }
 
@@ -85,7 +102,7 @@ StyledRect {
                 id: appIconComp
 
                 ColouredIcon {
-                    implicitSize: Math.round(Config.notifs.sizes.image * 0.6)
+                    implicitSize: Math.round(TokenConfig.sizes.notifs.image * 0.6)
                     source: Quickshell.iconPath(root.appIcon)
                     colour: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : root.urgency === NotificationUrgency.Low ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
                     layer.enabled: root.appIcon.endsWith("symbolic")
@@ -96,38 +113,40 @@ StyledRect {
                 id: materialIconComp
 
                 MaterialIcon {
-                    text: Icons.getNotifIcon(root.notifs[0]?.summary, root.urgency)
+                    text: Icons.getNotifIcon(root.activeNotifs[0]?.summary, root.urgency)
                     color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : root.urgency === NotificationUrgency.Low ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
-                    font.pointSize: Appearance.font.size.large
+                    font.pointSize: Tokens.font.size.large
                 }
             }
 
             StyledClippingRect {
                 anchors.fill: parent
                 color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3error : root.urgency === NotificationUrgency.Low ? Colours.layer(Colours.palette.m3surfaceContainerHigh, 3) : Colours.palette.m3secondaryContainer
-                radius: Appearance.rounding.full
+                radius: Tokens.rounding.full
 
                 Loader {
+                    asynchronous: true
                     anchors.centerIn: parent
                     sourceComponent: root.image ? imageComp : root.appIcon ? appIconComp : materialIconComp
                 }
             }
 
             Loader {
+                asynchronous: true
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
                 active: root.appIcon && root.image
 
                 sourceComponent: StyledRect {
-                    implicitWidth: Config.notifs.sizes.badge
-                    implicitHeight: Config.notifs.sizes.badge
+                    implicitWidth: Tokens.sizes.notifs.badge
+                    implicitHeight: Tokens.sizes.notifs.badge
 
                     color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3error : root.urgency === NotificationUrgency.Low ? Colours.palette.m3surfaceContainerHigh : Colours.palette.m3secondaryContainer
-                    radius: Appearance.rounding.full
+                    radius: Tokens.rounding.full
 
                     ColouredIcon {
                         anchors.centerIn: parent
-                        implicitSize: Math.round(Config.notifs.sizes.badge * 0.6)
+                        implicitSize: Math.round(Tokens.sizes.notifs.badge * 0.6)
                         source: Quickshell.iconPath(root.appIcon)
                         colour: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : root.urgency === NotificationUrgency.Low ? Colours.palette.m3onSurface : Colours.palette.m3onSecondaryContainer
                         layer.enabled: root.appIcon.endsWith("symbolic")
@@ -136,93 +155,86 @@ StyledRect {
             }
         }
 
-        ColumnLayout {
+        Column {
             id: column
 
-            Layout.topMargin: -Appearance.padding.small
-            Layout.bottomMargin: -Appearance.padding.small / 2
             Layout.fillWidth: true
-            spacing: 0
+            spacing: root.expanded ? Math.round(Tokens.spacing.small / 2) : 0
+
+            Behavior on spacing {
+                Anim {}
+            }
 
             RowLayout {
                 id: header
 
-                Layout.bottomMargin: root.expanded ? Math.round(Appearance.spacing.small / 2) : 0
-                Layout.fillWidth: true
-                spacing: Appearance.spacing.smaller
+                anchors.left: parent.left
+                anchors.right: parent.right
+                spacing: Tokens.spacing.smaller
 
                 StyledText {
                     Layout.fillWidth: true
                     text: root.modelData
                     color: Colours.palette.m3onSurfaceVariant
-                    font.pointSize: Appearance.font.size.small
+                    font.pointSize: Tokens.font.size.small
                     elide: Text.ElideRight
                 }
 
                 StyledText {
                     animate: true
-                    text: root.notifs.find(n => !n.closed)?.timeStr ?? ""
+                    text: root.activeNotifs[0]?.timeStr ?? ""
                     color: Colours.palette.m3outline
-                    font.pointSize: Appearance.font.size.small
+                    font.pointSize: Tokens.font.size.small
                 }
 
                 StyledRect {
-                    implicitWidth: expandBtn.implicitWidth + Appearance.padding.smaller * 2
-                    implicitHeight: groupCount.implicitHeight + Appearance.padding.small
+                    implicitWidth: expandBtn.implicitWidth + Tokens.padding.smaller * 2
+                    implicitHeight: groupCount.implicitHeight + Tokens.padding.small
 
                     color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3error : Colours.layer(Colours.palette.m3surfaceContainerHigh, 3)
-                    radius: Appearance.rounding.full
+                    radius: Tokens.rounding.full
 
                     StateLayer {
                         color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : Colours.palette.m3onSurface
-
-                        function onClicked(): void {
-                            root.toggleExpand(!root.expanded);
-                        }
+                        onClicked: root.toggleExpand(!root.expanded)
                     }
 
                     RowLayout {
                         id: expandBtn
 
                         anchors.centerIn: parent
-                        spacing: Appearance.spacing.small / 2
+                        spacing: Tokens.spacing.small / 2
 
                         StyledText {
                             id: groupCount
 
-                            Layout.leftMargin: Appearance.padding.small / 2
+                            Layout.leftMargin: Tokens.padding.small / 2
                             animate: true
                             text: root.notifCount
                             color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : Colours.palette.m3onSurface
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Tokens.font.size.small
                         }
 
                         MaterialIcon {
-                            Layout.rightMargin: -Appearance.padding.small / 2
+                            Layout.rightMargin: -Tokens.padding.small / 2
                             text: "expand_more"
                             color: root.urgency === NotificationUrgency.Critical ? Colours.palette.m3onError : Colours.palette.m3onSurface
                             rotation: root.expanded ? 180 : 0
-                            Layout.topMargin: root.expanded ? -Math.floor(Appearance.padding.smaller / 2) : 0
+                            Layout.topMargin: root.expanded ? -Math.floor(Tokens.padding.smaller / 2) : 0
 
                             Behavior on rotation {
                                 Anim {
-                                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                                    type: Anim.DefaultSpatial
                                 }
                             }
 
                             Behavior on Layout.topMargin {
                                 Anim {
-                                    duration: Appearance.anim.durations.expressiveDefaultSpatial
-                                    easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                                    type: Anim.DefaultSpatial
                                 }
                             }
                         }
                     }
-                }
-
-                Behavior on Layout.bottomMargin {
-                    Anim {}
                 }
             }
 

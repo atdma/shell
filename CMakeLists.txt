@@ -60,8 +60,14 @@ if("plugin" IN_LIST ENABLE_MODULES)
 endif()
 
 if("shell" IN_LIST ENABLE_MODULES)
-    foreach(dir assets components config modules services utils)
+    foreach(dir assets components modules services utils)
         install(DIRECTORY ${dir} DESTINATION "${INSTALL_QSCONFDIR}")
     endforeach()
-    install(FILES shell.qml LICENSE DESTINATION "${INSTALL_QSCONFDIR}")
+
+    file(READ shell.qml SHELL_QML)
+    string(REPLACE "settings.watchFiles: true" "settings.watchFiles: false" SHELL_QML "${SHELL_QML}")
+    file(WRITE "${CMAKE_BINARY_DIR}/qml/shell.qml" "${SHELL_QML}")
+    install(FILES "${CMAKE_BINARY_DIR}/qml/shell.qml" DESTINATION "${INSTALL_QSCONFDIR}")
+
+    install(FILES LICENSE DESTINATION "${INSTALL_QSCONFDIR}")
 endif()

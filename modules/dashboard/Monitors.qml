@@ -1,7 +1,7 @@
 import qs.components
 import qs.components.controls
 import qs.services
-import qs.config
+import Caelestia.Config
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
@@ -9,15 +9,15 @@ import QtQuick.Layouts
 ColumnLayout {
     id: root
 
-    spacing: Appearance.spacing.large
+    spacing: Tokens.spacing.large
 
     RowLayout {
         Layout.fillWidth: true
-        Layout.margins: Appearance.padding.normal
+        Layout.margins: Tokens.padding.normal
 
         StyledText {
             text: qsTr("Monitors")
-            font.pointSize: Appearance.font.size.extraLarge
+            font.pointSize: Tokens.font.size.extraLarge
             Layout.fillWidth: true
         }
 
@@ -40,7 +40,7 @@ ColumnLayout {
             id: monitorsLayout
             anchors.left: parent.left
             anchors.right: parent.right
-            spacing: Appearance.spacing.normal
+            spacing: Tokens.spacing.normal
 
             Repeater {
                 model: Hyprctl.monitors
@@ -48,9 +48,9 @@ ColumnLayout {
                 delegate: StyledRect {
                     id: monitorDelegate
                     Layout.fillWidth: true
-                    implicitHeight: monitorContent.implicitHeight + Appearance.padding.large * 2
+                    implicitHeight: monitorContent.implicitHeight + Tokens.padding.large * 2
                     color: Colours.tPalette.m3surfaceContainerHigh
-                    radius: Appearance.rounding.large
+                    radius: Tokens.rounding.large
 
                     readonly property var mon: modelData
                     readonly property var brightnessMon: Brightness.getMonitor(mon.name)
@@ -58,8 +58,8 @@ ColumnLayout {
                     ColumnLayout {
                         id: monitorContent
                         anchors.fill: parent
-                        anchors.margins: Appearance.padding.large
-                        spacing: Appearance.spacing.medium
+                        anchors.margins: Tokens.padding.large
+                        spacing: Tokens.spacing.medium
 
                         RowLayout {
                             Layout.fillWidth: true
@@ -72,13 +72,13 @@ ColumnLayout {
                                 spacing: 0
                                 StyledText {
                                     text: `${mon.name} - ${mon.make} ${mon.model}`
-                                    font.pointSize: Appearance.font.size.large
+                                    font.pointSize: Tokens.font.size.large
                                     Layout.fillWidth: true
                                 }
                                 StyledText {
                                     text: `${mon.width}x${mon.height}@${(mon.refreshRate ?? 0).toFixed(2)}Hz`
                                     color: Colours.palette.m3onSurfaceVariant
-                                    font.pointSize: Appearance.font.size.small
+                                    font.pointSize: Tokens.font.size.small
                                 }
                             }
                             StyledText {
@@ -94,7 +94,7 @@ ColumnLayout {
 
                             MaterialIcon {
                                 text: "brightness_medium"
-                                font.pointSize: Appearance.font.size.normal
+                                font.pointSize: Tokens.font.size.normal
                             }
 
                             StyledSlider {
@@ -115,7 +115,7 @@ ColumnLayout {
 
                             MaterialIcon {
                                 text: "zoom_in"
-                                font.pointSize: Appearance.font.size.normal
+                                font.pointSize: Tokens.font.size.normal
                             }
 
                             StyledSlider {
@@ -135,7 +135,7 @@ ColumnLayout {
                         // Refresh Rate
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
+                            spacing: Tokens.spacing.small
 
                             StyledText {
                                 text: qsTr("Refresh Rate")
@@ -155,7 +155,7 @@ ColumnLayout {
                         // Rotation
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
+                            spacing: Tokens.spacing.small
 
                             StyledText {
                                 text: qsTr("Rotation")
@@ -182,7 +182,7 @@ ColumnLayout {
                         // Arrangement
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
+                            spacing: Tokens.spacing.small
 
                             StyledText {
                                 text: qsTr("Position relative to:")

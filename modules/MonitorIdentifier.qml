@@ -3,7 +3,7 @@ pragma ComponentBehavior: Bound
 import qs.components
 import qs.components.containers
 import qs.services
-import qs.config
+import Caelestia.Config
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
@@ -43,9 +43,9 @@ Variants {
         StyledRect {
             id: identifierRect
             anchors.centerIn: parent
-            implicitWidth: Appearance.padding.large * 14
-            implicitHeight: Appearance.padding.large * 14
-            radius: Appearance.rounding.large
+            implicitWidth: Tokens.padding.large * 14
+            implicitHeight: Tokens.padding.large * 14
+            radius: Tokens.rounding.large
             color: Colours.tPalette.m3surfaceContainer
             opacity: root.active ? 0.92 : 0
 
@@ -57,7 +57,7 @@ Variants {
 
             ColumnLayout {
                 anchors.centerIn: parent
-                spacing: Appearance.spacing.small
+                spacing: Tokens.spacing.small
 
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
@@ -70,7 +70,7 @@ Variants {
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: win.monitor?.name ?? ""
-                    font.pointSize: Appearance.font.size.normal
+                    font.pointSize: Tokens.font.size.normal
                     color: Colours.palette.m3onSurfaceVariant
                 }
 

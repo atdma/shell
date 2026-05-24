@@ -2,14 +2,14 @@ pragma ComponentBehavior: Bound
 
 import ".."
 import "../../../launcher/services"
-import qs.components
-import qs.components.controls
-import qs.components.containers
-import qs.services
-import qs.config
-import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
+import Caelestia.Config
+import qs.components
+import qs.components.containers
+import qs.components.controls
+import qs.services
 
 CollapsibleSection {
     title: qsTr("Color scheme")
@@ -18,7 +18,7 @@ CollapsibleSection {
 
     ColumnLayout {
         Layout.fillWidth: true
-        spacing: Appearance.spacing.small / 2
+        spacing: Tokens.spacing.small / 2
 
         Repeater {
             model: Schemes.list
@@ -32,12 +32,13 @@ CollapsibleSection {
                 readonly property bool isCurrent: schemeKey === Schemes.currentScheme
 
                 color: Qt.alpha(Colours.tPalette.m3surfaceContainer, isCurrent ? Colours.tPalette.m3surfaceContainer.a : 0)
-                radius: Appearance.rounding.normal
+                radius: Tokens.rounding.normal
                 border.width: isCurrent ? 1 : 0
                 border.color: Colours.palette.m3primary
+                implicitHeight: schemeRow.implicitHeight + Tokens.padding.normal * 2
 
                 StateLayer {
-                    function onClicked(): void {
+                    onClicked: {
                         const name = modelData.name;
                         const flavour = modelData.flavour;
                         const schemeKey = `${name} ${flavour}`;
@@ -53,6 +54,7 @@ CollapsibleSection {
 
                 Timer {
                     id: reloadTimer
+
                     interval: 300
                     onTriggered: {
                         Schemes.reload();
@@ -63,9 +65,9 @@ CollapsibleSection {
                     id: schemeRow
 
                     anchors.fill: parent
-                    anchors.margins: Appearance.padding.normal
+                    anchors.margins: Tokens.padding.normal
 
-                    spacing: Appearance.spacing.normal
+                    spacing: Tokens.spacing.normal
 
                     StyledRect {
                         id: preview
@@ -76,15 +78,16 @@ CollapsibleSection {
                         border.color: Qt.alpha(`#${modelData.colours?.outline}`, 0.5)
 
                         color: `#${modelData.colours?.surface}`
-                        radius: Appearance.rounding.full
+                        radius: Tokens.rounding.full
                         implicitWidth: iconPlaceholder.implicitWidth
                         implicitHeight: iconPlaceholder.implicitWidth
 
                         MaterialIcon {
                             id: iconPlaceholder
+
                             visible: false
                             text: "circle"
-                            font.pointSize: Appearance.font.size.large
+                            font.pointSize: Tokens.font.size.large
                         }
 
                         Item {
@@ -102,7 +105,7 @@ CollapsibleSection {
 
                                 implicitWidth: preview.implicitWidth
                                 color: `#${modelData.colours?.primary}`
-                                radius: Appearance.rounding.full
+                                radius: Tokens.rounding.full
                             }
                         }
                     }
@@ -113,12 +116,12 @@ CollapsibleSection {
 
                         StyledText {
                             text: modelData.flavour ?? ""
-                            font.pointSize: Appearance.font.size.normal
+                            font.pointSize: Tokens.font.size.normal
                         }
 
                         StyledText {
                             text: modelData.name ?? ""
-                            font.pointSize: Appearance.font.size.small
+                            font.pointSize: Tokens.font.size.small
                             color: Colours.palette.m3outline
 
                             elide: Text.ElideRight
@@ -128,17 +131,16 @@ CollapsibleSection {
                     }
 
                     Loader {
+                        asynchronous: true
                         active: isCurrent
 
                         sourceComponent: MaterialIcon {
                             text: "check"
                             color: Colours.palette.m3onSurfaceVariant
-                            font.pointSize: Appearance.font.size.large
+                            font.pointSize: Tokens.font.size.large
                         }
                     }
                 }
-
-                implicitHeight: schemeRow.implicitHeight + Appearance.padding.normal * 2
             }
         }
     }

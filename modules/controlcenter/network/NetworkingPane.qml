@@ -3,17 +3,17 @@ pragma ComponentBehavior: Bound
 import ".."
 import "../components"
 import "."
-import qs.components
-import qs.components.controls
-import qs.components.effects
-import qs.components.containers
-import qs.services
-import qs.config
-import qs.utils
-import Quickshell
-import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
+import Quickshell.Widgets
+import Caelestia.Config
+import qs.components
+import qs.components.containers
+import qs.components.controls
+import qs.components.effects
+import qs.services
+import qs.utils
 
 Item {
     id: root
@@ -43,15 +43,15 @@ Item {
 
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    spacing: Appearance.spacing.normal
+                    spacing: Tokens.spacing.normal
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: Appearance.spacing.smaller
+                        spacing: Tokens.spacing.smaller
 
                         StyledText {
                             text: qsTr("Network")
-                            font.pointSize: Appearance.font.size.large
+                            font.pointSize: Tokens.font.size.large
                             font.weight: 500
                         }
 
@@ -63,9 +63,9 @@ Item {
                             toggled: Nmcli.wifiEnabled
                             icon: "wifi"
                             accent: "Tertiary"
-                            iconSize: Appearance.font.size.normal
-                            horizontalPadding: Appearance.padding.normal
-                            verticalPadding: Appearance.padding.smaller
+                            iconSize: Tokens.font.size.normal
+                            horizontalPadding: Tokens.padding.normal
+                            verticalPadding: Tokens.padding.smaller
                             tooltip: qsTr("Toggle WiFi")
 
                             onClicked: {
@@ -77,9 +77,9 @@ Item {
                             toggled: Nmcli.scanning
                             icon: "wifi_find"
                             accent: "Secondary"
-                            iconSize: Appearance.font.size.normal
-                            horizontalPadding: Appearance.padding.normal
-                            verticalPadding: Appearance.padding.smaller
+                            iconSize: Tokens.font.size.normal
+                            horizontalPadding: Tokens.padding.normal
+                            verticalPadding: Tokens.padding.smaller
                             tooltip: qsTr("Scan for networks")
 
                             onClicked: {
@@ -91,9 +91,9 @@ Item {
                             toggled: !root.session.ethernet.active && !root.session.network.active
                             icon: "settings"
                             accent: "Primary"
-                            iconSize: Appearance.font.size.normal
-                            horizontalPadding: Appearance.padding.normal
-                            verticalPadding: Appearance.padding.smaller
+                            iconSize: Tokens.font.size.normal
+                            horizontalPadding: Tokens.padding.normal
+                            verticalPadding: Tokens.padding.smaller
                             tooltip: qsTr("Network settings")
 
                             onClicked: {
@@ -120,6 +120,7 @@ Item {
 
                         Loader {
                             Layout.fillWidth: true
+                            asynchronous: true
                             sourceComponent: Component {
                                 VpnList {
                                     session: root.session
@@ -138,6 +139,7 @@ Item {
 
                         Loader {
                             Layout.fillWidth: true
+                            asynchronous: true
                             sourceComponent: Component {
                                 EthernetList {
                                     session: root.session
@@ -156,6 +158,7 @@ Item {
 
                         Loader {
                             Layout.fillWidth: true
+                            asynchronous: true
                             sourceComponent: Component {
                                 WirelessList {
                                     session: root.session
@@ -196,9 +199,6 @@ Item {
                 }
 
                 Connections {
-                    target: root.session && root.session.vpn ? root.session.vpn : null
-                    enabled: target !== null
-
                     function onActiveChanged() {
                         // Clear others when VPN is selected
                         if (root.session && root.session.vpn && root.session.vpn.active) {
@@ -209,12 +209,12 @@ Item {
                         }
                         rightPaneItem.nextComponent = rightPaneItem.getComponentForPane();
                     }
+
+                    target: root.session && root.session.vpn ? root.session.vpn : null
+                    enabled: target !== null
                 }
 
                 Connections {
-                    target: root.session && root.session.ethernet ? root.session.ethernet : null
-                    enabled: target !== null
-
                     function onActiveChanged() {
                         // Clear others when ethernet is selected
                         if (root.session && root.session.ethernet && root.session.ethernet.active) {
@@ -225,12 +225,12 @@ Item {
                         }
                         rightPaneItem.nextComponent = rightPaneItem.getComponentForPane();
                     }
+
+                    target: root.session && root.session.ethernet ? root.session.ethernet : null
+                    enabled: target !== null
                 }
 
                 Connections {
-                    target: root.session && root.session.network ? root.session.network : null
-                    enabled: target !== null
-
                     function onActiveChanged() {
                         // Clear others when wireless is selected
                         if (root.session && root.session.network && root.session.network.active) {
@@ -241,6 +241,9 @@ Item {
                         }
                         rightPaneItem.nextComponent = rightPaneItem.getComponentForPane();
                     }
+
+                    target: root.session && root.session.network ? root.session.network : null
+                    enabled: target !== null
                 }
 
                 Loader {
@@ -278,6 +281,7 @@ Item {
 
         StyledFlickable {
             id: settingsFlickable
+
             flickableDirection: Flickable.VerticalFlick
             contentHeight: settingsInner.height
 
@@ -301,6 +305,7 @@ Item {
 
         StyledFlickable {
             id: ethernetFlickable
+
             flickableDirection: Flickable.VerticalFlick
             contentHeight: ethernetDetailsInner.height
 
@@ -324,6 +329,7 @@ Item {
 
         StyledFlickable {
             id: wirelessFlickable
+
             flickableDirection: Flickable.VerticalFlick
             contentHeight: wirelessDetailsInner.height
 
@@ -347,6 +353,7 @@ Item {
 
         StyledFlickable {
             id: vpnFlickable
+
             flickableDirection: Flickable.VerticalFlick
             contentHeight: vpnDetailsInner.height
 

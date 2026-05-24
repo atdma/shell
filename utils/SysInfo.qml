@@ -1,10 +1,10 @@
 pragma Singleton
 
-import qs.config
-import qs.utils
+import QtQuick
 import Quickshell
 import Quickshell.Io
-import QtQuick
+import Caelestia.Config
+import qs.utils
 
 Singleton {
     id: root
@@ -36,11 +36,11 @@ Singleton {
             root.osIdLike = fd("ID_LIKE").split(" ");
 
             const logo = Quickshell.iconPath(fd("LOGO"), true);
-            if (Config.general.logo === "caelestia") {
+            if (GlobalConfig.general.logo === "caelestia") {
                 root.osLogo = Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`);
                 root.isDefaultLogo = true;
-            } else if (Config.general.logo) {
-                root.osLogo = Quickshell.iconPath(Config.general.logo, true) || "file://" + Paths.absolutePath(Config.general.logo);
+            } else if (GlobalConfig.general.logo) {
+                root.osLogo = Quickshell.iconPath(GlobalConfig.general.logo, true) || "file://" + Paths.absolutePath(GlobalConfig.general.logo);
                 root.isDefaultLogo = false;
             } else if (logo) {
                 root.osLogo = logo;
@@ -50,11 +50,11 @@ Singleton {
     }
 
     Connections {
-        target: Config.general
-
         function onLogoChanged(): void {
             osRelease.reload();
         }
+
+        target: GlobalConfig.general
     }
 
     Timer {
