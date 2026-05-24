@@ -1,22 +1,21 @@
 pragma ComponentBehavior: Bound
 
-import "services"
+import QtQuick
+import Caelestia.Config
 import qs.components
 import qs.components.controls
 import qs.services
-import qs.config
-import Quickshell
-import QtQuick
+import qs.modules.launcher.services
 
 Item {
     id: root
 
-    required property PersistentProperties visibilities
+    required property DrawerVisibilities visibilities
     required property var panels
     required property real maxHeight
 
-    readonly property int padding: Appearance.padding.large
-    readonly property int rounding: Appearance.rounding.large
+    readonly property int padding: Tokens.padding.large
+    readonly property int rounding: Tokens.rounding.large
 
     implicitWidth: listWrapper.width + padding * 2
     implicitHeight: searchWrapper.height + listWrapper.height + padding * 2
@@ -48,7 +47,7 @@ Item {
         id: searchWrapper
 
         color: Colours.layer(Colours.palette.m3surfaceContainer, 2)
-        radius: Appearance.rounding.full
+        radius: Tokens.rounding.full
 
         anchors.left: parent.left
         anchors.right: parent.right
@@ -73,13 +72,13 @@ Item {
 
             anchors.left: searchIcon.right
             anchors.right: clearIcon.left
-            anchors.leftMargin: Appearance.spacing.small
-            anchors.rightMargin: Appearance.spacing.small
+            anchors.leftMargin: Tokens.spacing.small
+            anchors.rightMargin: Tokens.spacing.small
 
-            topPadding: Appearance.padding.larger
-            bottomPadding: Appearance.padding.larger
+            topPadding: Tokens.padding.larger
+            bottomPadding: Tokens.padding.larger
 
-            placeholderText: qsTr("Type \"%1\" for commands").arg(Config.launcher.actionPrefix)
+            placeholderText: qsTr("Type \"%1\" for commands").arg(GlobalConfig.launcher.actionPrefix)
 
             onAccepted: {
                 const currentItem = list.currentList?.currentItem;
@@ -89,8 +88,8 @@ Item {
                             Wallpapers.previewColourLock = true;
                         Wallpapers.setWallpaper(currentItem.modelData.path);
                         root.visibilities.launcher = false;
-                    } else if (text.startsWith(Config.launcher.actionPrefix)) {
-                        if (text.startsWith(`${Config.launcher.actionPrefix}calc `))
+                    } else if (text.startsWith(GlobalConfig.launcher.actionPrefix)) {
+                        if (text.startsWith(`${GlobalConfig.launcher.actionPrefix}calc `))
                             currentItem.onClicked();
                         else
                             currentItem.modelData.onClicked(list.currentList);
@@ -107,14 +106,14 @@ Item {
             Keys.onEscapePressed: root.visibilities.launcher = false
 
             Keys.onPressed: event => {
-                if (!Config.launcher.vimKeybinds)
+                if (!GlobalConfig.launcher.vimKeybinds)
                     return;
 
                 if (event.modifiers & Qt.ControlModifier) {
-                    if (event.key === Qt.Key_J) {
+                    if (event.key === Qt.Key_J || event.key === Qt.Key_N) {
                         list.currentList?.incrementCurrentIndex();
                         event.accepted = true;
-                    } else if (event.key === Qt.Key_K) {
+                    } else if (event.key === Qt.Key_K || event.key === Qt.Key_P) {
                         list.currentList?.decrementCurrentIndex();
                         event.accepted = true;
                     }
@@ -130,8 +129,6 @@ Item {
             Component.onCompleted: forceActiveFocus()
 
             Connections {
-                target: root.visibilities
-
                 function onLauncherChanged(): void {
                     if (!root.visibilities.launcher)
                         search.text = "";
@@ -141,6 +138,8 @@ Item {
                     if (!root.visibilities.session)
                         search.forceActiveFocus();
                 }
+
+                target: root.visibilities
             }
         }
 
@@ -177,13 +176,13 @@ Item {
 
             Behavior on width {
                 Anim {
-                    duration: Appearance.anim.durations.small
+                    type: Anim.StandardSmall
                 }
             }
 
             Behavior on opacity {
                 Anim {
-                    duration: Appearance.anim.durations.small
+                    type: Anim.StandardSmall
                 }
             }
         }

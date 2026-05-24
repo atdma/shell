@@ -2,15 +2,15 @@ pragma ComponentBehavior: Bound
 
 import ".."
 import "../components"
-import qs.components
-import qs.components.controls
-import qs.components.effects
-import qs.components.containers
-import qs.services
-import qs.config
-import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Widgets
+import Caelestia.Config
+import qs.components
+import qs.components.containers
+import qs.components.controls
+import qs.components.effects
+import qs.services
 
 Item {
     id: root
@@ -23,9 +23,9 @@ Item {
         anchors.fill: parent
 
         leftContent: Component {
-
             StyledFlickable {
                 id: leftAudioFlickable
+
                 flickableDirection: Flickable.VerticalFlick
                 contentHeight: leftContent.height
 
@@ -38,15 +38,15 @@ Item {
 
                     anchors.left: parent.left
                     anchors.right: parent.right
-                    spacing: Appearance.spacing.normal
+                    spacing: Tokens.spacing.normal
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: Appearance.spacing.smaller
+                        spacing: Tokens.spacing.smaller
 
                         StyledText {
                             text: qsTr("Audio")
-                            font.pointSize: Appearance.font.size.large
+                            font.pointSize: Tokens.font.size.large
                             font.weight: 500
                         }
 
@@ -64,15 +64,15 @@ Item {
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
+                            spacing: Tokens.spacing.small
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
+                                spacing: Tokens.spacing.small
 
                                 StyledText {
                                     text: qsTr("Devices (%1)").arg(Audio.sinks.length)
-                                    font.pointSize: Appearance.font.size.normal
+                                    font.pointSize: Tokens.font.size.normal
                                     font.weight: 500
                                 }
                             }
@@ -93,10 +93,11 @@ Item {
                                     Layout.fillWidth: true
 
                                     color: Audio.sink?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
-                                    radius: Appearance.rounding.normal
+                                    radius: Tokens.rounding.normal
+                                    implicitHeight: outputRowLayout.implicitHeight + Tokens.padding.normal * 2
 
                                     StateLayer {
-                                        function onClicked(): void {
+                                        onClicked: {
                                             Audio.setAudioSink(modelData);
                                         }
                                     }
@@ -107,13 +108,13 @@ Item {
                                         anchors.left: parent.left
                                         anchors.right: parent.right
                                         anchors.verticalCenter: parent.verticalCenter
-                                        anchors.margins: Appearance.padding.normal
+                                        anchors.margins: Tokens.padding.normal
 
-                                        spacing: Appearance.spacing.normal
+                                        spacing: Tokens.spacing.normal
 
                                         MaterialIcon {
                                             text: Audio.sink?.id === modelData.id ? "speaker" : "speaker_group"
-                                            font.pointSize: Appearance.font.size.large
+                                            font.pointSize: Tokens.font.size.large
                                             fill: Audio.sink?.id === modelData.id ? 1 : 0
                                         }
 
@@ -126,8 +127,6 @@ Item {
                                             font.weight: Audio.sink?.id === modelData.id ? 500 : 400
                                         }
                                     }
-
-                                    implicitHeight: outputRowLayout.implicitHeight + Appearance.padding.normal * 2
                                 }
                             }
                         }
@@ -142,15 +141,15 @@ Item {
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
+                            spacing: Tokens.spacing.small
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: Appearance.spacing.small
+                                spacing: Tokens.spacing.small
 
                                 StyledText {
                                     text: qsTr("Devices (%1)").arg(Audio.sources.length)
-                                    font.pointSize: Appearance.font.size.normal
+                                    font.pointSize: Tokens.font.size.normal
                                     font.weight: 500
                                 }
                             }
@@ -171,10 +170,11 @@ Item {
                                     Layout.fillWidth: true
 
                                     color: Audio.source?.id === modelData.id ? Colours.layer(Colours.palette.m3surfaceContainer, 2) : "transparent"
-                                    radius: Appearance.rounding.normal
+                                    radius: Tokens.rounding.normal
+                                    implicitHeight: inputRowLayout.implicitHeight + Tokens.padding.normal * 2
 
                                     StateLayer {
-                                        function onClicked(): void {
+                                        onClicked: {
                                             Audio.setAudioSource(modelData);
                                         }
                                     }
@@ -185,13 +185,13 @@ Item {
                                         anchors.left: parent.left
                                         anchors.right: parent.right
                                         anchors.verticalCenter: parent.verticalCenter
-                                        anchors.margins: Appearance.padding.normal
+                                        anchors.margins: Tokens.padding.normal
 
-                                        spacing: Appearance.spacing.normal
+                                        spacing: Tokens.spacing.normal
 
                                         MaterialIcon {
                                             text: "mic"
-                                            font.pointSize: Appearance.font.size.large
+                                            font.pointSize: Tokens.font.size.large
                                             fill: Audio.source?.id === modelData.id ? 1 : 0
                                         }
 
@@ -204,8 +204,6 @@ Item {
                                             font.weight: Audio.source?.id === modelData.id ? 500 : 400
                                         }
                                     }
-
-                                    implicitHeight: inputRowLayout.implicitHeight + Appearance.padding.normal * 2
                                 }
                             }
                         }
@@ -217,6 +215,7 @@ Item {
         rightContent: Component {
             StyledFlickable {
                 id: rightAudioFlickable
+
                 flickableDirection: Flickable.VerticalFlick
                 contentHeight: contentLayout.height
 
@@ -230,7 +229,7 @@ Item {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.top: parent.top
-                    spacing: Appearance.spacing.normal
+                    spacing: Tokens.spacing.normal
 
                     SettingsHeader {
                         icon: "volume_up"
@@ -243,19 +242,19 @@ Item {
                     }
 
                     SectionContainer {
-                        contentSpacing: Appearance.spacing.normal
+                        contentSpacing: Tokens.spacing.normal
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
+                            spacing: Tokens.spacing.small
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: Appearance.spacing.normal
+                                spacing: Tokens.spacing.normal
 
                                 StyledText {
                                     text: qsTr("Volume")
-                                    font.pointSize: Appearance.font.size.normal
+                                    font.pointSize: Tokens.font.size.normal
                                     font.weight: 500
                                 }
 
@@ -265,6 +264,7 @@ Item {
 
                                 StyledInputField {
                                     id: outputVolumeInput
+
                                     Layout.preferredWidth: 70
                                     validator: IntValidator {
                                         bottom: 0
@@ -274,15 +274,6 @@ Item {
 
                                     Component.onCompleted: {
                                         text = Math.round(Audio.volume * 100).toString();
-                                    }
-
-                                    Connections {
-                                        target: Audio
-                                        function onVolumeChanged() {
-                                            if (!outputVolumeInput.hasFocus) {
-                                                outputVolumeInput.text = Math.round(Audio.volume * 100).toString();
-                                            }
-                                        }
                                     }
 
                                     onTextEdited: text => {
@@ -300,24 +291,34 @@ Item {
                                             text = Math.round(Audio.volume * 100).toString();
                                         }
                                     }
+
+                                    Connections {
+                                        function onVolumeChanged() {
+                                            if (!outputVolumeInput.hasFocus) {
+                                                outputVolumeInput.text = Math.round(Audio.volume * 100).toString();
+                                            }
+                                        }
+
+                                        target: Audio
+                                    }
                                 }
 
                                 StyledText {
                                     text: "%"
                                     color: Colours.palette.m3outline
-                                    font.pointSize: Appearance.font.size.normal
+                                    font.pointSize: Tokens.font.size.normal
                                     opacity: Audio.muted ? 0.5 : 1
                                 }
 
                                 StyledRect {
                                     implicitWidth: implicitHeight
-                                    implicitHeight: muteIcon.implicitHeight + Appearance.padding.normal * 2
+                                    implicitHeight: muteIcon.implicitHeight + Tokens.padding.normal * 2
 
-                                    radius: Appearance.rounding.normal
+                                    radius: Tokens.rounding.normal
                                     color: Audio.muted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
                                     StateLayer {
-                                        function onClicked(): void {
+                                        onClicked: {
                                             if (Audio.sink?.audio) {
                                                 Audio.sink.audio.muted = !Audio.sink.audio.muted;
                                             }
@@ -336,8 +337,9 @@ Item {
 
                             StyledSlider {
                                 id: outputVolumeSlider
+
                                 Layout.fillWidth: true
-                                implicitHeight: Appearance.padding.normal * 3
+                                implicitHeight: Tokens.padding.normal * 3
 
                                 value: Audio.volume
                                 enabled: !Audio.muted
@@ -358,19 +360,19 @@ Item {
                     }
 
                     SectionContainer {
-                        contentSpacing: Appearance.spacing.normal
+                        contentSpacing: Tokens.spacing.normal
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
+                            spacing: Tokens.spacing.small
 
                             RowLayout {
                                 Layout.fillWidth: true
-                                spacing: Appearance.spacing.normal
+                                spacing: Tokens.spacing.normal
 
                                 StyledText {
                                     text: qsTr("Volume")
-                                    font.pointSize: Appearance.font.size.normal
+                                    font.pointSize: Tokens.font.size.normal
                                     font.weight: 500
                                 }
 
@@ -380,6 +382,7 @@ Item {
 
                                 StyledInputField {
                                     id: inputVolumeInput
+
                                     Layout.preferredWidth: 70
                                     validator: IntValidator {
                                         bottom: 0
@@ -389,15 +392,6 @@ Item {
 
                                     Component.onCompleted: {
                                         text = Math.round(Audio.sourceVolume * 100).toString();
-                                    }
-
-                                    Connections {
-                                        target: Audio
-                                        function onSourceVolumeChanged() {
-                                            if (!inputVolumeInput.hasFocus) {
-                                                inputVolumeInput.text = Math.round(Audio.sourceVolume * 100).toString();
-                                            }
-                                        }
                                     }
 
                                     onTextEdited: text => {
@@ -415,24 +409,34 @@ Item {
                                             text = Math.round(Audio.sourceVolume * 100).toString();
                                         }
                                     }
+
+                                    Connections {
+                                        function onSourceVolumeChanged() {
+                                            if (!inputVolumeInput.hasFocus) {
+                                                inputVolumeInput.text = Math.round(Audio.sourceVolume * 100).toString();
+                                            }
+                                        }
+
+                                        target: Audio
+                                    }
                                 }
 
                                 StyledText {
                                     text: "%"
                                     color: Colours.palette.m3outline
-                                    font.pointSize: Appearance.font.size.normal
+                                    font.pointSize: Tokens.font.size.normal
                                     opacity: Audio.sourceMuted ? 0.5 : 1
                                 }
 
                                 StyledRect {
                                     implicitWidth: implicitHeight
-                                    implicitHeight: muteInputIcon.implicitHeight + Appearance.padding.normal * 2
+                                    implicitHeight: muteInputIcon.implicitHeight + Tokens.padding.normal * 2
 
-                                    radius: Appearance.rounding.normal
+                                    radius: Tokens.rounding.normal
                                     color: Audio.sourceMuted ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
                                     StateLayer {
-                                        function onClicked(): void {
+                                        onClicked: {
                                             if (Audio.source?.audio) {
                                                 Audio.source.audio.muted = !Audio.source.audio.muted;
                                             }
@@ -451,8 +455,9 @@ Item {
 
                             StyledSlider {
                                 id: inputVolumeSlider
+
                                 Layout.fillWidth: true
-                                implicitHeight: Appearance.padding.normal * 3
+                                implicitHeight: Tokens.padding.normal * 3
 
                                 value: Audio.sourceVolume
                                 enabled: !Audio.sourceMuted
@@ -473,11 +478,11 @@ Item {
                     }
 
                     SectionContainer {
-                        contentSpacing: Appearance.spacing.normal
+                        contentSpacing: Tokens.spacing.normal
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: Appearance.spacing.small
+                            spacing: Tokens.spacing.small
 
                             Repeater {
                                 model: Audio.streams
@@ -488,15 +493,15 @@ Item {
                                     required property int index
 
                                     Layout.fillWidth: true
-                                    spacing: Appearance.spacing.smaller
+                                    spacing: Tokens.spacing.smaller
 
                                     RowLayout {
                                         Layout.fillWidth: true
-                                        spacing: Appearance.spacing.normal
+                                        spacing: Tokens.spacing.normal
 
                                         MaterialIcon {
                                             text: "apps"
-                                            font.pointSize: Appearance.font.size.normal
+                                            font.pointSize: Tokens.font.size.normal
                                             fill: 0
                                         }
 
@@ -505,12 +510,13 @@ Item {
                                             elide: Text.ElideRight
                                             maximumLineCount: 1
                                             text: Audio.getStreamName(modelData)
-                                            font.pointSize: Appearance.font.size.normal
+                                            font.pointSize: Tokens.font.size.normal
                                             font.weight: 500
                                         }
 
                                         StyledInputField {
                                             id: streamVolumeInput
+
                                             Layout.preferredWidth: 70
                                             validator: IntValidator {
                                                 bottom: 0
@@ -520,15 +526,6 @@ Item {
 
                                             Component.onCompleted: {
                                                 text = Math.round(Audio.getStreamVolume(modelData) * 100).toString();
-                                            }
-
-                                            Connections {
-                                                target: modelData
-                                                function onAudioChanged() {
-                                                    if (!streamVolumeInput.hasFocus && modelData?.audio) {
-                                                        streamVolumeInput.text = Math.round(modelData.audio.volume * 100).toString();
-                                                    }
-                                                }
                                             }
 
                                             onTextEdited: text => {
@@ -546,24 +543,34 @@ Item {
                                                     text = Math.round(Audio.getStreamVolume(modelData) * 100).toString();
                                                 }
                                             }
+
+                                            Connections {
+                                                function onAudioChanged() {
+                                                    if (!streamVolumeInput.hasFocus && modelData?.audio) {
+                                                        streamVolumeInput.text = Math.round(modelData.audio.volume * 100).toString();
+                                                    }
+                                                }
+
+                                                target: modelData
+                                            }
                                         }
 
                                         StyledText {
                                             text: "%"
                                             color: Colours.palette.m3outline
-                                            font.pointSize: Appearance.font.size.normal
+                                            font.pointSize: Tokens.font.size.normal
                                             opacity: Audio.getStreamMuted(modelData) ? 0.5 : 1
                                         }
 
                                         StyledRect {
                                             implicitWidth: implicitHeight
-                                            implicitHeight: streamMuteIcon.implicitHeight + Appearance.padding.normal * 2
+                                            implicitHeight: streamMuteIcon.implicitHeight + Tokens.padding.normal * 2
 
-                                            radius: Appearance.rounding.normal
+                                            radius: Tokens.rounding.normal
                                             color: Audio.getStreamMuted(modelData) ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
                                             StateLayer {
-                                                function onClicked(): void {
+                                                onClicked: {
                                                     Audio.setStreamMuted(modelData, !Audio.getStreamMuted(modelData));
                                                 }
                                             }
@@ -580,7 +587,7 @@ Item {
 
                                     StyledSlider {
                                         Layout.fillWidth: true
-                                        implicitHeight: Appearance.padding.normal * 3
+                                        implicitHeight: Tokens.padding.normal * 3
 
                                         value: Audio.getStreamVolume(modelData)
                                         enabled: !Audio.getStreamMuted(modelData)
@@ -593,12 +600,13 @@ Item {
                                         }
 
                                         Connections {
-                                            target: modelData
                                             function onAudioChanged() {
                                                 if (modelData?.audio) {
                                                     value = modelData.audio.volume;
                                                 }
                                             }
+
+                                            target: modelData
                                         }
                                     }
                                 }
@@ -609,7 +617,7 @@ Item {
                                 visible: Audio.streams.length === 0
                                 text: qsTr("No applications currently playing audio")
                                 color: Colours.palette.m3outline
-                                font.pointSize: Appearance.font.size.small
+                                font.pointSize: Tokens.font.size.small
                                 horizontalAlignment: Text.AlignHCenter
                             }
                         }

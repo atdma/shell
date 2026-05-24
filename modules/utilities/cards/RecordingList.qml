@@ -1,23 +1,22 @@
 pragma ComponentBehavior: Bound
 
-import qs.components
-import qs.components.controls
-import qs.components.containers
-import qs.services
-import qs.config
-import qs.utils
-import Caelestia
-import Caelestia.Models
-import Quickshell
-import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
+import Quickshell.Widgets
+import Caelestia.Config
+import Caelestia.Models
+import qs.components
+import qs.components.containers
+import qs.components.controls
+import qs.services
+import qs.utils
 
 ColumnLayout {
     id: root
 
     required property var props
-    required property var visibilities
+    required property DrawerVisibilities visibilities
 
     spacing: 0
 
@@ -28,19 +27,19 @@ ColumnLayout {
         onClicked: root.props.recordingListExpanded = !root.props.recordingListExpanded
 
         RowLayout {
-            spacing: Appearance.spacing.smaller
+            spacing: Tokens.spacing.smaller
 
             MaterialIcon {
                 Layout.alignment: Qt.AlignVCenter
                 text: "list"
-                font.pointSize: Appearance.font.size.large
+                font.pointSize: Tokens.font.size.large
             }
 
             StyledText {
                 Layout.alignment: Qt.AlignVCenter
                 Layout.fillWidth: true
                 text: qsTr("Recordings")
-                font.pointSize: Appearance.font.size.normal
+                font.pointSize: Tokens.font.size.normal
             }
 
             IconButton {
@@ -62,8 +61,8 @@ ColumnLayout {
         }
 
         Layout.fillWidth: true
-        Layout.rightMargin: -Appearance.spacing.small
-        implicitHeight: (Appearance.font.size.larger + Appearance.padding.small) * (root.props.recordingListExpanded ? 10 : 3)
+        Layout.rightMargin: -Tokens.spacing.small
+        implicitHeight: (Tokens.font.size.larger + Tokens.padding.small) * (root.props.recordingListExpanded ? 10 : 3)
         clip: true
 
         StyledScrollBar.vertical: StyledScrollBar {
@@ -78,14 +77,14 @@ ColumnLayout {
 
             anchors.left: list.contentItem.left
             anchors.right: list.contentItem.right
-            anchors.rightMargin: Appearance.spacing.small
-            spacing: Appearance.spacing.small / 2
+            anchors.rightMargin: Tokens.spacing.small
+            spacing: Tokens.spacing.small / 2
 
             Component.onCompleted: baseName = modelData.baseName
 
             StyledText {
                 Layout.fillWidth: true
-                Layout.rightMargin: Appearance.spacing.small / 2
+                Layout.rightMargin: Tokens.spacing.small / 2
                 text: {
                     const time = recording.baseName;
                     const matches = time.match(/^recording_(\d{4})(\d{2})(\d{2})_(\d{2})-(\d{2})-(\d{2})/);
@@ -105,7 +104,7 @@ ColumnLayout {
                 onClicked: {
                     root.visibilities.utilities = false;
                     root.visibilities.sidebar = false;
-                    Quickshell.execDetached(["app2unit", "--", ...Config.general.apps.playback, recording.modelData.path]);
+                    Quickshell.execDetached(["app2unit", "--", ...GlobalConfig.general.apps.playback, recording.modelData.path]);
                 }
             }
 
@@ -115,7 +114,7 @@ ColumnLayout {
                 onClicked: {
                     root.visibilities.utilities = false;
                     root.visibilities.sidebar = false;
-                    Quickshell.execDetached(["app2unit", "--", ...Config.general.apps.explorer, recording.modelData.path]);
+                    Quickshell.execDetached(["app2unit", "--", ...GlobalConfig.general.apps.explorer, recording.modelData.path]);
                 }
             }
 
@@ -163,19 +162,20 @@ ColumnLayout {
         }
 
         Loader {
+            asynchronous: true
             anchors.centerIn: parent
 
             opacity: list.count === 0 ? 1 : 0
             active: opacity > 0
 
             sourceComponent: ColumnLayout {
-                spacing: Appearance.spacing.small
+                spacing: Tokens.spacing.small
 
                 MaterialIcon {
                     Layout.alignment: Qt.AlignHCenter
                     text: "scan_delete"
                     color: Colours.palette.m3outline
-                    font.pointSize: Appearance.font.size.extraLarge
+                    font.pointSize: Tokens.font.size.extraLarge
 
                     opacity: root.props.recordingListExpanded ? 1 : 0
                     scale: root.props.recordingListExpanded ? 1 : 0
@@ -195,7 +195,7 @@ ColumnLayout {
                 }
 
                 RowLayout {
-                    spacing: Appearance.spacing.smaller
+                    spacing: Tokens.spacing.smaller
 
                     MaterialIcon {
                         Layout.alignment: Qt.AlignHCenter
@@ -233,8 +233,7 @@ ColumnLayout {
 
         Behavior on implicitHeight {
             Anim {
-                duration: Appearance.anim.durations.expressiveDefaultSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                type: Anim.DefaultSpatial
             }
         }
     }

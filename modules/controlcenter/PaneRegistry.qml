@@ -37,10 +37,28 @@ QtObject {
             readonly property string component: "taskbar/TaskbarPane.qml"
         },
         QtObject {
+            readonly property string id: "notifications"
+            readonly property string label: "notifications"
+            readonly property string icon: "notifications"
+            readonly property string component: "notifications/NotificationsPane.qml"
+        },
+        QtObject {
             readonly property string id: "launcher"
             readonly property string label: "launcher"
             readonly property string icon: "apps"
             readonly property string component: "launcher/LauncherPane.qml"
+        },
+        QtObject {
+            readonly property string id: "monitors"
+            readonly property string label: "monitors"
+            readonly property string icon: "monitor"
+            readonly property string component: "monitors/MonitorsPane.qml"
+        },
+        QtObject {
+            readonly property string id: "dashboard"
+            readonly property string label: "dashboard"
+            readonly property string icon: "dashboard"
+            readonly property string component: "dashboard/DashboardPane.qml"
         }
     ]
 
@@ -54,7 +72,7 @@ QtObject {
         return result;
     }
 
-    function getByIndex(index: int): QtObject {
+    function getByIndex(index: int): var {
         if (index >= 0 && index < panes.length) {
             return panes[index];
         }
@@ -70,12 +88,12 @@ QtObject {
         return -1;
     }
 
-    function getByLabel(label: string): QtObject {
+    function getByLabel(label: string): var {
         const index = getIndexByLabel(label);
         return getByIndex(index);
     }
 
-    function getById(id: string): QtObject {
+    function getById(id: string): var {
         for (let i = 0; i < panes.length; i++) {
             if (panes[i].id === id) {
                 return panes[i];

@@ -1,27 +1,33 @@
 pragma ComponentBehavior: Bound
 
-import qs.components
-import qs.components.effects
-import qs.components.controls
-import qs.services
-import qs.utils
-import qs.config
-import Caelestia.Services
-import Quickshell
-import Quickshell.Widgets
-import Quickshell.Services.Mpris
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Shapes
+import Quickshell
+import Quickshell.Services.Mpris
+import Caelestia.Config
+import Caelestia.Services
+import qs.components
+import qs.components.controls
+import qs.services
+import qs.utils
 
 Item {
     id: root
 
-    required property PersistentProperties visibilities
+    required property DrawerVisibilities visibilities
+    readonly property bool needsKeyboard: lyricMenuOpen
+
+    readonly property real nonAnimHeight: Math.max(cover.implicitHeight + Tokens.sizes.dashboard.mediaVisualiserSize * 2, lyricMenuOpen ? lyricMenu.implicitHeight : details.implicitHeight, bongocat.implicitHeight) + Tokens.padding.large * 2
+    readonly property real detailsHeightWithoutLyrics: details.implicitHeight - lyricsViewInDetails.implicitHeight
+
+    property bool lyricMenuOpen: false
+    property bool lyricsShowing: LyricsService.lyricsVisible && LyricsService.model.count != 0
+    property bool lyricsShowingDebounced: false
 
     property real playerProgress: {
         const active = Players.active;
-        return active?.length ? active.position / active.length : 0;
+        return active?.length ? (active.position % active.length) / active.length : 0;
     }
 
     function lengthStr(length: int): string {
@@ -37,21 +43,54 @@ Item {
         return `${mins}:${secs}`;
     }
 
-    implicitWidth: cover.implicitWidth + Config.dashboard.sizes.mediaVisualiserSize * 2 + details.implicitWidth + details.anchors.leftMargin + bongocat.implicitWidth + bongocat.anchors.leftMargin * 2 + Appearance.padding.large * 2
-    implicitHeight: Math.max(cover.implicitHeight + Config.dashboard.sizes.mediaVisualiserSize * 2, details.implicitHeight, bongocat.implicitHeight) + Appearance.padding.large * 2
+    onLyricsShowingChanged: {
+        if (lyricsShowing) {
+            lyricsHideDelay.stop();
+            lyricsShowingDebounced = true;
+        } else {
+            lyricsHideDelay.restart();
+        }
+    }
+
+    implicitWidth: cover.implicitWidth + Tokens.sizes.dashboard.mediaVisualiserSize * 2 + details.implicitWidth + details.anchors.leftMargin + bongocat.implicitWidth + bongocat.anchors.leftMargin * 2 + Tokens.padding.large * 2
+    implicitHeight: nonAnimHeight
+
+    Behavior on implicitHeight {
+        Anim {}
+    }
 
     Behavior on playerProgress {
         Anim {
-            duration: Appearance.anim.durations.large
+            type: Anim.StandardLarge
         }
     }
 
     Timer {
         running: Players.active?.isPlaying ?? false
-        interval: Config.dashboard.mediaUpdateInterval
+        interval: GlobalConfig.dashboard.mediaUpdateInterval
         triggeredOnStart: true
         repeat: true
-        onTriggered: Players.active?.positionChanged()
+        onTriggered: {
+            if (!Players.active)
+                return;
+            LyricsService.updatePosition();
+            Players.active?.positionChanged();
+        }
+    }
+
+    Timer {
+        id: lyricsHideDelay
+
+        interval: 300
+        repeat: false
+    }
+
+    Connections {
+        function onTriggered() {
+            root.lyricsShowingDebounced = false;
+        }
+
+        target: lyricsHideDelay
     }
 
     ServiceRef {
@@ -67,12 +106,12 @@ Item {
 
         readonly property real centerX: width / 2
         readonly property real centerY: height / 2
-        readonly property real innerX: cover.implicitWidth / 2 + Appearance.spacing.small
-        readonly property real innerY: cover.implicitHeight / 2 + Appearance.spacing.small
+        readonly property real innerX: cover.implicitWidth / 2 + Tokens.spacing.small
+        readonly property real innerY: cover.implicitHeight / 2 + Tokens.spacing.small
         property color colour: Colours.palette.m3primary
 
         anchors.fill: cover
-        anchors.margins: -Config.dashboard.sizes.mediaVisualiserSize
+        anchors.margins: -Tokens.sizes.dashboard.mediaVisualiserSize
 
         asynchronous: true
         preferredRendererType: Shape.CurveRenderer
@@ -83,7 +122,7 @@ Item {
         id: visualiserBars
 
         model: Array.from({
-            length: Config.services.visualiserBars
+            length: GlobalConfig.services.visualiserBars
         }, (_, i) => i)
 
         ShapePath {
@@ -92,13 +131,13 @@ Item {
             required property int modelData
             readonly property real value: Math.max(1e-3, Math.min(1, Audio.cava.values[modelData]))
 
-            readonly property real angle: modelData * 2 * Math.PI / Config.services.visualiserBars
-            readonly property real magnitude: value * Config.dashboard.sizes.mediaVisualiserSize
+            readonly property real angle: modelData * 2 * Math.PI / GlobalConfig.services.visualiserBars
+            readonly property real magnitude: value * root.Tokens.sizes.dashboard.mediaVisualiserSize
             readonly property real cos: Math.cos(angle)
             readonly property real sin: Math.sin(angle)
 
-            capStyle: Appearance.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
-            strokeWidth: 360 / Config.services.visualiserBars - Appearance.spacing.small / 4
+            capStyle: root.Tokens.rounding.scale === 0 ? ShapePath.SquareCap : ShapePath.RoundCap
+            strokeWidth: 360 / GlobalConfig.services.visualiserBars - root.Tokens.spacing.small / 4
             strokeColor: Colours.palette.m3primary
 
             startX: visualiser.centerX + (visualiser.innerX + strokeWidth / 2) * cos
@@ -120,10 +159,10 @@ Item {
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: parent.left
-        anchors.leftMargin: Appearance.padding.large + Config.dashboard.sizes.mediaVisualiserSize
+        anchors.leftMargin: Tokens.padding.large + Tokens.sizes.dashboard.mediaVisualiserSize
 
-        implicitWidth: Config.dashboard.sizes.mediaCoverArtSize
-        implicitHeight: Config.dashboard.sizes.mediaCoverArtSize
+        implicitWidth: Tokens.sizes.dashboard.mediaCoverArtSize
+        implicitHeight: Tokens.sizes.dashboard.mediaCoverArtSize
 
         color: Colours.tPalette.m3surfaceContainerHigh
         radius: Infinity
@@ -142,11 +181,20 @@ Item {
 
             anchors.fill: parent
 
-            source: Players.active?.trackArtUrl ?? ""
+            source: Players.getArtUrl(Players.active)
             asynchronous: true
             fillMode: Image.PreserveAspectCrop
-            sourceSize.width: width
-            sourceSize.height: height
+            sourceSize: {
+                const dpr = (QsWindow.window as QsWindow)?.devicePixelRatio ?? 1;
+                return Qt.size(width * dpr, height * dpr);
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    LyricsService.toggleVisibility();
+                }
+            }
         }
     }
 
@@ -155,9 +203,9 @@ Item {
 
         anchors.verticalCenter: parent.verticalCenter
         anchors.left: visualiser.right
-        anchors.leftMargin: Appearance.spacing.normal
+        anchors.leftMargin: Tokens.spacing.normal
 
-        spacing: Appearance.spacing.small
+        spacing: Tokens.spacing.small
 
         StyledText {
             id: title
@@ -169,7 +217,7 @@ Item {
             horizontalAlignment: Text.AlignHCenter
             text: (Players.active?.trackTitle ?? qsTr("No media")) || qsTr("Unknown title")
             color: Players.active ? Colours.palette.m3primary : Colours.palette.m3onSurface
-            font.pointSize: Appearance.font.size.normal
+            font.pointSize: Tokens.font.size.normal
             elide: Text.ElideRight
         }
 
@@ -184,7 +232,7 @@ Item {
             visible: !!Players.active
             text: Players.active?.trackAlbum || qsTr("Unknown album")
             color: Colours.palette.m3outline
-            font.pointSize: Appearance.font.size.small
+            font.pointSize: Tokens.font.size.small
             elide: Text.ElideRight
         }
 
@@ -202,19 +250,34 @@ Item {
             wrapMode: Players.active ? Text.NoWrap : Text.WordWrap
         }
 
+        LyricsView {
+            id: lyricsViewInDetails
+
+            Layout.fillWidth: true
+            Layout.preferredHeight: 200
+        }
+
         RowLayout {
             id: controls
 
             Layout.alignment: Qt.AlignHCenter
-            Layout.topMargin: Appearance.spacing.small
-            Layout.bottomMargin: Appearance.spacing.smaller
+            Layout.topMargin: Tokens.spacing.small
+            Layout.bottomMargin: Tokens.spacing.smaller
 
-            spacing: Appearance.spacing.small
+            spacing: Tokens.spacing.small
+
+            PlayerControl {
+                type: IconButton.Text
+                icon: Players.active?.shuffle ? "shuffle_on" : "shuffle"
+                font.pointSize: Math.round(Tokens.font.size.large)
+                disabled: !Players.active?.shuffleSupported
+                onClicked: Players.active.shuffle = !Players.active?.shuffle
+            }
 
             PlayerControl {
                 type: IconButton.Text
                 icon: "skip_previous"
-                font.pointSize: Math.round(Appearance.font.size.large * 1.5)
+                font.pointSize: Math.round(Tokens.font.size.large * 1.5)
                 disabled: !Players.active?.canGoPrevious
                 onClicked: Players.active?.previous()
             }
@@ -223,9 +286,9 @@ Item {
                 icon: Players.active?.isPlaying ? "pause" : "play_arrow"
                 label.animate: true
                 toggle: true
-                padding: Appearance.padding.small / 2
+                padding: Tokens.padding.small / 2
                 checked: Players.active?.isPlaying ?? false
-                font.pointSize: Math.round(Appearance.font.size.large * 1.5)
+                font.pointSize: Math.round(Tokens.font.size.large * 1.5)
                 disabled: !Players.active?.canTogglePlaying
                 onClicked: Players.active?.togglePlaying()
             }
@@ -233,9 +296,16 @@ Item {
             PlayerControl {
                 type: IconButton.Text
                 icon: "skip_next"
-                font.pointSize: Math.round(Appearance.font.size.large * 1.5)
+                font.pointSize: Math.round(Tokens.font.size.large * 1.5)
                 disabled: !Players.active?.canGoNext
                 onClicked: Players.active?.next()
+            }
+
+            PlayerControl {
+                type: IconButton.Text
+                icon: "lyrics"
+                font.pointSize: Math.round(Tokens.font.size.large)
+                onClicked: root.lyricMenuOpen = !root.lyricMenuOpen
             }
         }
 
@@ -244,7 +314,7 @@ Item {
 
             enabled: !!Players.active
             implicitWidth: 280
-            implicitHeight: Appearance.padding.normal * 3
+            implicitHeight: Tokens.padding.normal * 3
 
             onMoved: {
                 const active = Players.active;
@@ -260,9 +330,6 @@ Item {
             }
 
             CustomMouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.NoButton
-
                 function onWheel(event: WheelEvent) {
                     const active = Players.active;
                     if (!active?.canSeek || !active?.positionSupported)
@@ -274,6 +341,9 @@ Item {
                         active.position = Math.max(0, Math.min(active.length, active.position + delta));
                     });
                 }
+
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
             }
         }
 
@@ -286,9 +356,9 @@ Item {
 
                 anchors.left: parent.left
 
-                text: root.lengthStr(Players.active?.position ?? -1)
+                text: root.lengthStr(Players.active ? Players.active.position % Players.active.length : -1)
                 color: Colours.palette.m3onSurfaceVariant
-                font.pointSize: Appearance.font.size.small
+                font.pointSize: Tokens.font.size.small
             }
 
             StyledText {
@@ -298,105 +368,146 @@ Item {
 
                 text: root.lengthStr(Players.active?.length ?? -1)
                 color: Colours.palette.m3onSurfaceVariant
-                font.pointSize: Appearance.font.size.small
-            }
-        }
-
-        RowLayout {
-            Layout.alignment: Qt.AlignHCenter
-            spacing: Appearance.spacing.small
-
-            PlayerControl {
-                type: IconButton.Text
-                icon: "move_up"
-                inactiveOnColour: Colours.palette.m3secondary
-                padding: Appearance.padding.small
-                font.pointSize: Appearance.font.size.large
-                disabled: !Players.active?.canRaise
-                onClicked: {
-                    Players.active?.raise();
-                    root.visibilities.dashboard = false;
-                }
-            }
-
-            SplitButton {
-                id: playerSelector
-
-                disabled: !Players.list.length
-                active: menuItems.find(m => m.modelData === Players.active) ?? menuItems[0] ?? null
-                menu.onItemSelected: item => Players.manualActive = item.modelData
-
-                menuItems: playerList.instances
-                fallbackIcon: "music_off"
-                fallbackText: qsTr("No players")
-
-                label.Layout.maximumWidth: slider.implicitWidth * 0.28
-                label.elide: Text.ElideRight
-
-                stateLayer.disabled: true
-                menuOnTop: true
-
-                Variants {
-                    id: playerList
-
-                    model: Players.list
-
-                    MenuItem {
-                        required property MprisPlayer modelData
-
-                        icon: modelData === Players.active ? "check" : ""
-                        text: Players.getIdentity(modelData)
-                        activeIcon: "animated_images"
-                    }
-                }
-            }
-
-            PlayerControl {
-                type: IconButton.Text
-                icon: "delete"
-                inactiveOnColour: Colours.palette.m3error
-                padding: Appearance.padding.small
-                font.pointSize: Appearance.font.size.large
-                disabled: !Players.active?.canQuit
-                onClicked: Players.active?.quit()
+                font.pointSize: Tokens.font.size.small
             }
         }
     }
 
-    Item {
-        id: bongocat
+    ColumnLayout {
+        id: leftSection
 
         anchors.verticalCenter: parent.verticalCenter
+        anchors.verticalCenterOffset: playerChanger.parent == leftSection ? -playerChanger.height : 0
         anchors.left: details.right
-        anchors.leftMargin: Appearance.spacing.normal
+        anchors.leftMargin: Tokens.spacing.normal
 
-        implicitWidth: visualiser.width
-        implicitHeight: visualiser.height
+        visible: lyricMenu.height === 0 || opacity > 0
+        opacity: lyricMenu.height === 0 ? 1 : 0
 
-        AnimatedImage {
-            anchors.centerIn: parent
-
-            width: visualiser.width * 0.75
-            height: visualiser.height * 0.75
-
-            playing: Players.active?.isPlaying ?? false
-            speed: Audio.beatTracker.bpm / 300
-            source: Paths.absolutePath(Config.paths.mediaGif)
-            asynchronous: true
-            fillMode: AnimatedImage.PreserveAspectFit
+        Behavior on opacity {
+            NumberAnimation {
+                duration: Tokens.anim.durations.normal
+                easing.type: Easing.OutCubic
+            }
         }
+
+        Item {
+            id: bongocat
+
+            implicitWidth: visualiser.width
+            implicitHeight: visualiser.height
+
+            AnimatedImage {
+                anchors.centerIn: parent
+
+                width: visualiser.width * 0.75
+                height: visualiser.height * 0.75
+
+                playing: Players.active?.isPlaying ?? false
+                speed: Audio.beatTracker.bpm / Config.general.mediaGifSpeedAdjustment // qmllint disable unresolved-type
+                source: Paths.absolutePath(Config.paths.mediaGif)
+                asynchronous: true
+                fillMode: AnimatedImage.PreserveAspectFit
+            }
+        }
+    }
+
+    LyricMenu {
+        id: lyricMenu
+
+        anchors.top: parent.top
+        anchors.left: details.right
+        anchors.right: parent.right
+        anchors.leftMargin: Tokens.spacing.normal
+
+        contentHeight: !root.lyricsShowingDebounced ? root.detailsHeightWithoutLyrics + Tokens.padding.large * 5 : root.detailsHeightWithoutLyrics + lyricsViewInDetails.implicitHeight
+
+        visible: root.lyricMenuOpen || height > 0
+        height: root.lyricMenuOpen ? implicitHeight : 0
+        clip: true
+
+        Behavior on height {
+            NumberAnimation {
+                duration: Tokens.anim.durations.normal
+                easing.type: Easing.OutCubic
+            }
+        }
+    }
+
+    RowLayout {
+        id: playerChanger
+
+        parent: !root.lyricsShowingDebounced ? details : leftSection
+        Layout.alignment: Qt.AlignHCenter
+        spacing: Tokens.spacing.small
+
+        PlayerControl {
+            type: IconButton.Text
+            icon: "move_up"
+            inactiveOnColour: Colours.palette.m3secondary
+            padding: Tokens.padding.small
+            font.pointSize: Tokens.font.size.large
+            disabled: !Players.active?.canRaise
+            onClicked: {
+                Players.active?.raise();
+                root.visibilities.dashboard = false;
+            }
+        }
+
+        SplitButton {
+            id: playerSelector
+
+            disabled: !Players.list.length
+            active: menuItems.find(m => m.modelData === Players.active) ?? menuItems[0] ?? null
+            menu.onItemSelected: item => Players.manualActive = (item as PlayerItem).modelData
+
+            menuItems: playerList.instances
+            fallbackIcon: "music_off"
+            fallbackText: qsTr("No players")
+
+            label.Layout.maximumWidth: slider.implicitWidth * 0.28
+            label.elide: Text.ElideRight
+
+            stateLayer.disabled: true
+            menuOnTop: true
+
+            Variants {
+                id: playerList
+
+                model: Players.list
+
+                PlayerItem {}
+            }
+        }
+
+        PlayerControl {
+            type: IconButton.Text
+            icon: "delete"
+            inactiveOnColour: Colours.palette.m3error
+            padding: Tokens.padding.small
+            font.pointSize: Tokens.font.size.large
+            disabled: !Players.active?.canQuit
+            onClicked: Players.active?.quit()
+        }
+    }
+
+    component PlayerItem: MenuItem {
+        required property MprisPlayer modelData
+
+        icon: modelData === Players.active ? "check" : ""
+        text: Players.getIdentity(modelData)
+        activeIcon: "animated_images"
     }
 
     component PlayerControl: IconButton {
-        Layout.preferredWidth: implicitWidth + (stateLayer.pressed ? Appearance.padding.large : internalChecked ? Appearance.padding.smaller : 0)
-        radius: stateLayer.pressed ? Appearance.rounding.small / 2 : internalChecked ? Appearance.rounding.small : implicitHeight / 2
-        radiusAnim.duration: Appearance.anim.durations.expressiveFastSpatial
-        radiusAnim.easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+        Layout.preferredWidth: implicitWidth + (stateLayer.pressed ? Tokens.padding.large : internalChecked ? Tokens.padding.smaller : 0)
+        radius: stateLayer.pressed ? Tokens.rounding.small / 2 : internalChecked ? Tokens.rounding.small : implicitHeight / 2
+        radiusAnim.duration: Tokens.anim.durations.expressiveFastSpatial
+        radiusAnim.easing: Tokens.anim.expressiveFastSpatial
 
         Behavior on Layout.preferredWidth {
             Anim {
-                duration: Appearance.anim.durations.expressiveFastSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                type: Anim.FastSpatial
             }
         }
     }

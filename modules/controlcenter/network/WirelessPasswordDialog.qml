@@ -2,16 +2,16 @@ pragma ComponentBehavior: Bound
 
 import ".."
 import "."
-import qs.components
-import qs.components.controls
-import qs.components.effects
-import qs.components.containers
-import qs.services
-import qs.config
-import qs.utils
-import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
+import Caelestia.Config
+import qs.components
+import qs.components.containers
+import qs.components.controls
+import qs.components.effects
+import qs.services
+import qs.utils
 
 Item {
     id: root
@@ -29,6 +29,47 @@ Item {
     }
 
     property bool isClosing: false
+
+    function checkConnectionStatus(): void {
+        if (!root.visible || !connectButton.connecting) {
+            return;
+        }
+
+        const isConnected = root.network && Nmcli.active && Nmcli.active.ssid && Nmcli.active.ssid.toLowerCase().trim() === root.network.ssid.toLowerCase().trim();
+
+        if (isConnected) {
+            connectionSuccessTimer.start();
+            return;
+        }
+
+        if (Nmcli.pendingConnection === null && connectButton.connecting) {
+            if (connectionMonitor.repeatCount > 10) {
+                connectionMonitor.stop();
+                connectButton.connecting = false;
+                connectButton.hasError = true;
+                connectButton.enabled = true;
+                connectButton.text = qsTr("Connect");
+                passwordContainer.passwordBuffer = "";
+                if (root.network && root.network.ssid) {
+                    Nmcli.forgetNetwork(root.network.ssid);
+                }
+            }
+        }
+    }
+
+    function closeDialog(): void {
+        if (isClosing) {
+            return;
+        }
+
+        isClosing = true;
+        passwordContainer.passwordBuffer = "";
+        connectButton.connecting = false;
+        connectButton.hasError = false;
+        connectButton.text = qsTr("Connect");
+        connectionMonitor.stop();
+    }
+
     visible: session.network.showPasswordDialog || isClosing
     enabled: session.network.showPasswordDialog && !isClosing
     focus: enabled
@@ -58,12 +99,13 @@ Item {
         anchors.centerIn: parent
 
         implicitWidth: 400
-        implicitHeight: content.implicitHeight + Appearance.padding.large * 2
+        implicitHeight: content.implicitHeight + Tokens.padding.large * 2
 
-        radius: Appearance.rounding.normal
+        radius: Tokens.rounding.normal
         color: Colours.tPalette.m3surface
         opacity: root.session.network.showPasswordDialog && !root.isClosing ? 1 : 0
         scale: root.session.network.showPasswordDialog && !root.isClosing ? 1 : 0.7
+        Keys.onEscapePressed: closeDialog()
 
         Behavior on opacity {
             Anim {}
@@ -94,28 +136,26 @@ Item {
             }
         }
 
-        Keys.onEscapePressed: closeDialog()
-
         ColumnLayout {
             id: content
 
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: Appearance.padding.large
+            anchors.margins: Tokens.padding.large
 
-            spacing: Appearance.spacing.normal
+            spacing: Tokens.spacing.normal
 
             MaterialIcon {
                 Layout.alignment: Qt.AlignHCenter
                 text: "lock"
-                font.pointSize: Appearance.font.size.extraLarge * 2
+                font.pointSize: Tokens.font.size.extraLarge * 2
             }
 
             StyledText {
                 Layout.alignment: Qt.AlignHCenter
                 text: qsTr("Enter password")
-                font.pointSize: Appearance.font.size.large
+                font.pointSize: Tokens.font.size.large
                 font.weight: 500
             }
 
@@ -123,14 +163,14 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 text: root.network ? qsTr("Network: %1").arg(root.network.ssid) : ""
                 color: Colours.palette.m3outline
-                font.pointSize: Appearance.font.size.small
+                font.pointSize: Tokens.font.size.small
             }
 
             StyledText {
                 id: statusText
 
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: Appearance.spacing.small
+                Layout.topMargin: Tokens.spacing.small
                 visible: connectButton.connecting || connectButton.hasError
                 text: {
                     if (connectButton.hasError) {
@@ -142,22 +182,29 @@ Item {
                     return "";
                 }
                 color: connectButton.hasError ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
-                font.pointSize: Appearance.font.size.small
+                font.pointSize: Tokens.font.size.small
                 font.weight: 400
                 wrapMode: Text.WordWrap
-                Layout.maximumWidth: parent.width - Appearance.padding.large * 2
+                Layout.maximumWidth: parent.width - Tokens.padding.large * 2
             }
 
             Item {
                 id: passwordContainer
-                Layout.topMargin: Appearance.spacing.large
-                Layout.fillWidth: true
-                implicitHeight: Math.max(48, charList.implicitHeight + Appearance.padding.normal * 2)
 
+                property string passwordBuffer: ""
+
+                Layout.topMargin: Tokens.spacing.large
+                Layout.fillWidth: true
+                implicitHeight: Math.max(48, charList.implicitHeight + Tokens.padding.normal * 2)
                 focus: true
                 Keys.onPressed: event => {
                     if (!activeFocus) {
                         forceActiveFocus();
+                    }
+
+                    if (event.key === Qt.Key_Escape) {
+                        event.accepted = false;
+                        closeDialog();
                     }
 
                     if (connectButton.hasError && event.text && event.text.length > 0) {
@@ -177,15 +224,16 @@ Item {
                         }
                         event.accepted = true;
                     } else if (event.text && event.text.length > 0) {
+                        if (event.key === Qt.Key_Tab) {
+                            event.accepted = false;
+                            return;
+                        }
                         passwordBuffer += event.text;
                         event.accepted = true;
                     }
                 }
 
-                property string passwordBuffer: ""
-
                 Connections {
-                    target: root.session.network
                     function onShowPasswordDialogChanged(): void {
                         if (root.session.network.showPasswordDialog) {
                             Qt.callLater(() => {
@@ -195,10 +243,11 @@ Item {
                             });
                         }
                     }
+
+                    target: root.session.network
                 }
 
                 Connections {
-                    target: root
                     function onVisibleChanged(): void {
                         if (root.visible) {
                             Qt.callLater(() => {
@@ -206,11 +255,13 @@ Item {
                             });
                         }
                     }
+
+                    target: root
                 }
 
                 StyledRect {
                     anchors.fill: parent
-                    radius: Appearance.rounding.normal
+                    radius: Tokens.rounding.normal
                     color: passwordContainer.activeFocus ? Qt.lighter(Colours.tPalette.m3surfaceContainer, 1.05) : Colours.tPalette.m3surfaceContainer
                     border.width: passwordContainer.activeFocus || connectButton.hasError ? 4 : (root.visible ? 1 : 0)
                     border.color: {
@@ -237,21 +288,22 @@ Item {
                 }
 
                 StateLayer {
-                    hoverEnabled: false
-                    cursorShape: Qt.IBeamCursor
-
-                    function onClicked(): void {
+                    onClicked: {
                         passwordContainer.forceActiveFocus();
                     }
+
+                    hoverEnabled: false
+                    cursorShape: Qt.IBeamCursor
                 }
 
                 StyledText {
                     id: placeholder
+
                     anchors.centerIn: parent
                     text: qsTr("Password")
                     color: Colours.palette.m3outline
-                    font.pointSize: Appearance.font.size.normal
-                    font.family: Appearance.font.family.mono
+                    font.pointSize: Tokens.font.size.normal
+                    font.family: Tokens.font.family.mono
                     opacity: passwordContainer.passwordBuffer ? 0 : 1
 
                     Behavior on opacity {
@@ -266,10 +318,10 @@ Item {
 
                     anchors.centerIn: parent
                     implicitWidth: fullWidth
-                    implicitHeight: Appearance.font.size.normal
+                    implicitHeight: Tokens.font.size.normal
 
                     orientation: Qt.Horizontal
-                    spacing: Appearance.spacing.small / 2
+                    spacing: Tokens.spacing.small / 2
                     interactive: false
 
                     model: ScriptModel {
@@ -283,7 +335,7 @@ Item {
                         implicitHeight: charList.implicitHeight
 
                         color: Colours.palette.m3onSurface
-                        radius: Appearance.rounding.small / 2
+                        radius: Tokens.rounding.small / 2
 
                         opacity: 0
                         scale: 0
@@ -326,8 +378,7 @@ Item {
 
                         Behavior on scale {
                             Anim {
-                                duration: Appearance.anim.durations.expressiveFastSpatial
-                                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                                type: Anim.FastSpatial
                             }
                         }
                     }
@@ -339,15 +390,15 @@ Item {
             }
 
             RowLayout {
-                Layout.topMargin: Appearance.spacing.normal
+                Layout.topMargin: Tokens.spacing.normal
                 Layout.fillWidth: true
-                spacing: Appearance.spacing.normal
+                spacing: Tokens.spacing.normal
 
                 TextButton {
                     id: cancelButton
 
                     Layout.fillWidth: true
-                    Layout.minimumHeight: Appearance.font.size.normal + Appearance.padding.normal * 2
+                    Layout.minimumHeight: Tokens.font.size.normal + Tokens.padding.normal * 2
                     inactiveColour: Colours.palette.m3secondaryContainer
                     inactiveOnColour: Colours.palette.m3onSecondaryContainer
                     text: qsTr("Cancel")
@@ -362,7 +413,7 @@ Item {
                     property bool hasError: false
 
                     Layout.fillWidth: true
-                    Layout.minimumHeight: Appearance.font.size.normal + Appearance.padding.normal * 2
+                    Layout.minimumHeight: Tokens.font.size.normal + Tokens.padding.normal * 2
                     inactiveColour: Colours.palette.m3primary
                     inactiveOnColour: Colours.palette.m3onPrimary
                     text: qsTr("Connect")
@@ -414,40 +465,14 @@ Item {
         }
     }
 
-    function checkConnectionStatus(): void {
-        if (!root.visible || !connectButton.connecting) {
-            return;
-        }
-
-        const isConnected = root.network && Nmcli.active && Nmcli.active.ssid && Nmcli.active.ssid.toLowerCase().trim() === root.network.ssid.toLowerCase().trim();
-
-        if (isConnected) {
-            connectionSuccessTimer.start();
-            return;
-        }
-
-        if (Nmcli.pendingConnection === null && connectButton.connecting) {
-            if (connectionMonitor.repeatCount > 10) {
-                connectionMonitor.stop();
-                connectButton.connecting = false;
-                connectButton.hasError = true;
-                connectButton.enabled = true;
-                connectButton.text = qsTr("Connect");
-                passwordContainer.passwordBuffer = "";
-                if (root.network && root.network.ssid) {
-                    Nmcli.forgetNetwork(root.network.ssid);
-                }
-            }
-        }
-    }
-
     Timer {
         id: connectionMonitor
+
+        property int repeatCount: 0
+
         interval: 1000
         repeat: true
         triggeredOnStart: false
-        property int repeatCount: 0
-
         onTriggered: {
             repeatCount++;
             checkConnectionStatus();
@@ -462,6 +487,7 @@ Item {
 
     Timer {
         id: connectionSuccessTimer
+
         interval: 500
         onTriggered: {
             if (root.visible && Nmcli.active && Nmcli.active.ssid) {
@@ -477,7 +503,6 @@ Item {
     }
 
     Connections {
-        target: Nmcli
         function onActiveChanged() {
             if (root.visible) {
                 checkConnectionStatus();
@@ -494,18 +519,7 @@ Item {
                 Nmcli.forgetNetwork(ssid);
             }
         }
-    }
 
-    function closeDialog(): void {
-        if (isClosing) {
-            return;
-        }
-
-        isClosing = true;
-        passwordContainer.passwordBuffer = "";
-        connectButton.connecting = false;
-        connectButton.hasError = false;
-        connectButton.text = qsTr("Connect");
-        connectionMonitor.stop();
+        target: Nmcli
     }
 }

@@ -1,37 +1,37 @@
 pragma ComponentBehavior: Bound
 
+import QtQuick
+import QtQuick.Layouts
+import Caelestia.Config
 import qs.components
 import qs.components.controls
 import qs.components.images
 import qs.services
-import qs.config
 import qs.utils
-import QtQuick
-import QtQuick.Layouts
 
 ColumnLayout {
     id: root
 
     required property var lock
     readonly property real centerScale: Math.min(1, (lock.screen?.height ?? 1440) / 1440)
-    readonly property int centerWidth: Config.lock.sizes.centerWidth * centerScale
+    readonly property int centerWidth: Tokens.sizes.lock.centerWidth * centerScale
 
     Layout.preferredWidth: centerWidth
     Layout.fillWidth: false
     Layout.fillHeight: true
 
-    spacing: Appearance.spacing.large * 2
+    spacing: Tokens.spacing.large * 2
 
     RowLayout {
         Layout.alignment: Qt.AlignHCenter
-        spacing: Appearance.spacing.small
+        spacing: Tokens.spacing.small
 
         StyledText {
             Layout.alignment: Qt.AlignVCenter
             text: Time.hourStr
             color: Colours.palette.m3secondary
-            font.pointSize: Math.floor(Appearance.font.size.extraLarge * 3 * root.centerScale)
-            font.family: Appearance.font.family.clock
+            font.pointSize: Math.floor(Tokens.font.size.extraLarge * 3 * root.centerScale)
+            font.family: Tokens.font.family.clock
             font.bold: true
         }
 
@@ -39,8 +39,8 @@ ColumnLayout {
             Layout.alignment: Qt.AlignVCenter
             text: ":"
             color: Colours.palette.m3primary
-            font.pointSize: Math.floor(Appearance.font.size.extraLarge * 3 * root.centerScale)
-            font.family: Appearance.font.family.clock
+            font.pointSize: Math.floor(Tokens.font.size.extraLarge * 3 * root.centerScale)
+            font.family: Tokens.font.family.clock
             font.bold: true
         }
 
@@ -48,23 +48,24 @@ ColumnLayout {
             Layout.alignment: Qt.AlignVCenter
             text: Time.minuteStr
             color: Colours.palette.m3secondary
-            font.pointSize: Math.floor(Appearance.font.size.extraLarge * 3 * root.centerScale)
-            font.family: Appearance.font.family.clock
+            font.pointSize: Math.floor(Tokens.font.size.extraLarge * 3 * root.centerScale)
+            font.family: Tokens.font.family.clock
             font.bold: true
         }
 
         Loader {
-            Layout.leftMargin: Appearance.spacing.small
+            asynchronous: true
+            Layout.leftMargin: Tokens.spacing.small
             Layout.alignment: Qt.AlignVCenter
 
-            active: Config.services.useTwelveHourClock
+            active: GlobalConfig.services.useTwelveHourClock
             visible: active
 
             sourceComponent: StyledText {
                 text: Time.amPmStr
                 color: Colours.palette.m3primary
-                font.pointSize: Math.floor(Appearance.font.size.extraLarge * 2 * root.centerScale)
-                font.family: Appearance.font.family.clock
+                font.pointSize: Math.floor(Tokens.font.size.extraLarge * 2 * root.centerScale)
+                font.family: Tokens.font.family.clock
                 font.bold: true
             }
         }
@@ -72,24 +73,24 @@ ColumnLayout {
 
     StyledText {
         Layout.alignment: Qt.AlignHCenter
-        Layout.topMargin: -Appearance.padding.large * 2
+        Layout.topMargin: -Tokens.padding.large * 2
 
         text: Time.format("dddd, d MMMM yyyy")
         color: Colours.palette.m3tertiary
-        font.pointSize: Math.floor(Appearance.font.size.extraLarge * root.centerScale)
-        font.family: Appearance.font.family.mono
+        font.pointSize: Math.floor(Tokens.font.size.extraLarge * root.centerScale)
+        font.family: Tokens.font.family.mono
         font.bold: true
     }
 
     StyledClippingRect {
-        Layout.topMargin: Appearance.spacing.large * 2
+        Layout.topMargin: Tokens.spacing.large * 2
         Layout.alignment: Qt.AlignHCenter
 
         implicitWidth: root.centerWidth / 2
         implicitHeight: root.centerWidth / 2
 
         color: Colours.tPalette.m3surfaceContainer
-        radius: Appearance.rounding.full
+        radius: Tokens.rounding.full
 
         MaterialIcon {
             anchors.centerIn: parent
@@ -97,6 +98,7 @@ ColumnLayout {
             text: "person"
             color: Colours.palette.m3onSurfaceVariant
             font.pointSize: Math.floor(root.centerWidth / 4)
+            visible: pfp.status !== Image.Ready
         }
 
         CachingImage {
@@ -111,10 +113,10 @@ ColumnLayout {
         Layout.alignment: Qt.AlignHCenter
 
         implicitWidth: root.centerWidth * 0.8
-        implicitHeight: input.implicitHeight + Appearance.padding.small * 2
+        implicitHeight: input.implicitHeight + Tokens.padding.small * 2
 
         color: Colours.tPalette.m3surfaceContainer
-        radius: Appearance.rounding.full
+        radius: Tokens.rounding.full
 
         focus: true
         onActiveFocusChanged: {
@@ -133,24 +135,24 @@ ColumnLayout {
         }
 
         StateLayer {
-            hoverEnabled: false
-            cursorShape: Qt.IBeamCursor
-
-            function onClicked(): void {
+            onClicked: {
                 parent.forceActiveFocus();
             }
+
+            hoverEnabled: false
+            cursorShape: Qt.IBeamCursor
         }
 
         RowLayout {
             id: input
 
             anchors.fill: parent
-            anchors.margins: Appearance.padding.small
-            spacing: Appearance.spacing.normal
+            anchors.margins: Tokens.padding.small
+            spacing: Tokens.spacing.normal
 
             Item {
                 implicitWidth: implicitHeight
-                implicitHeight: fprintIcon.implicitHeight + Appearance.padding.small * 2
+                implicitHeight: fprintIcon.implicitHeight + Tokens.padding.small * 2
 
                 MaterialIcon {
                     id: fprintIcon
@@ -158,13 +160,13 @@ ColumnLayout {
                     anchors.centerIn: parent
                     animate: true
                     text: {
-                        if (root.lock.pam.fprint.tries >= Config.lock.maxFprintTries)
+                        if (root.lock.pam.fprint.tries >= GlobalConfig.lock.maxFprintTries)
                             return "fingerprint_off";
                         if (root.lock.pam.fprint.active)
                             return "fingerprint";
                         return "lock";
                     }
-                    color: root.lock.pam.fprint.tries >= Config.lock.maxFprintTries ? Colours.palette.m3error : Colours.palette.m3onSurface
+                    color: root.lock.pam.fprint.tries >= GlobalConfig.lock.maxFprintTries ? Colours.palette.m3error : Colours.palette.m3onSurface
                     opacity: root.lock.pam.passwd.active ? 0 : 1
 
                     Behavior on opacity {
@@ -186,17 +188,14 @@ ColumnLayout {
 
             StyledRect {
                 implicitWidth: implicitHeight
-                implicitHeight: enterIcon.implicitHeight + Appearance.padding.small * 2
+                implicitHeight: enterIcon.implicitHeight + Tokens.padding.small * 2
 
                 color: root.lock.pam.buffer ? Colours.palette.m3primary : Colours.layer(Colours.palette.m3surfaceContainerHigh, 2)
-                radius: Appearance.rounding.full
+                radius: Tokens.rounding.full
 
                 StateLayer {
                     color: root.lock.pam.buffer ? Colours.palette.m3onPrimary : Colours.palette.m3onSurface
-
-                    function onClicked(): void {
-                        root.lock.pam.passwd.start();
-                    }
+                    onClicked: root.lock.pam.passwd.start()
                 }
 
                 MaterialIcon {
@@ -213,7 +212,7 @@ ColumnLayout {
 
     Item {
         Layout.fillWidth: true
-        Layout.topMargin: -Appearance.spacing.large
+        Layout.topMargin: -Tokens.spacing.large
 
         implicitHeight: Math.max(message.implicitHeight, stateMessage.implicitHeight)
 
@@ -270,7 +269,7 @@ ColumnLayout {
             color: Colours.palette.m3onSurfaceVariant
             animateProp: "opacity"
 
-            font.family: Appearance.font.family.mono
+            font.family: Tokens.font.family.mono
             horizontalAlignment: Qt.AlignHCenter
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
             lineHeight: 1.2
@@ -325,8 +324,8 @@ ColumnLayout {
             opacity: 0
             color: Colours.palette.m3error
 
-            font.pointSize: Appearance.font.size.small
-            font.family: Appearance.font.family.mono
+            font.pointSize: Tokens.font.size.small
+            font.family: Tokens.font.family.mono
             horizontalAlignment: Qt.AlignHCenter
             wrapMode: Text.WrapAtWordBoundaryOrAnywhere
 
@@ -355,8 +354,6 @@ ColumnLayout {
             }
 
             Connections {
-                target: root.lock.pam
-
                 function onFlashMsg(): void {
                     exitAnim.stop();
                     if (message.scale < 1)
@@ -364,6 +361,8 @@ ColumnLayout {
                     else
                         flashAnim.restart();
                 }
+
+                target: root.lock.pam
             }
 
             Anim {
@@ -395,13 +394,13 @@ ColumnLayout {
                     target: message
                     property: "scale"
                     to: 0.7
-                    duration: Appearance.anim.durations.large
+                    type: Anim.StandardLarge
                 }
                 Anim {
                     target: message
                     property: "opacity"
                     to: 0
-                    duration: Appearance.anim.durations.large
+                    type: Anim.StandardLarge
                 }
             }
         }
@@ -410,7 +409,7 @@ ColumnLayout {
     component FlashAnim: NumberAnimation {
         target: message
         property: "opacity"
-        duration: Appearance.anim.durations.small
+        duration: Tokens.anim.durations.small
         easing.type: Easing.Linear
     }
 }

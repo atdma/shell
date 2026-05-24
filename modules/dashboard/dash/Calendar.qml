@@ -1,61 +1,58 @@
 pragma ComponentBehavior: Bound
 
-import qs.components
-import qs.components.effects
-import qs.components.controls
-import qs.services
-import qs.config
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Caelestia.Config
+import qs.components
+import qs.components.controls
+import qs.components.effects
+import qs.services
 
 CustomMouseArea {
     id: root
 
-    required property var state
+    required property DashboardState dashState
 
-    readonly property int currMonth: state.currentDate.getMonth()
-    readonly property int currYear: state.currentDate.getFullYear()
+    readonly property int currMonth: dashState.currentDate.getMonth()
+    readonly property int currYear: dashState.currentDate.getFullYear()
+
+    function onWheel(event: WheelEvent): void {
+        if (event.angleDelta.y > 0)
+            root.dashState.currentDate = new Date(root.currYear, root.currMonth - 1, 1);
+        else if (event.angleDelta.y < 0)
+            root.dashState.currentDate = new Date(root.currYear, root.currMonth + 1, 1);
+    }
 
     anchors.left: parent.left
     anchors.right: parent.right
     implicitHeight: inner.implicitHeight + inner.anchors.margins * 2
 
     acceptedButtons: Qt.MiddleButton
-    onClicked: root.state.currentDate = new Date()
-
-    function onWheel(event: WheelEvent): void {
-        if (event.angleDelta.y > 0)
-            root.state.currentDate = new Date(root.currYear, root.currMonth - 1, 1);
-        else if (event.angleDelta.y < 0)
-            root.state.currentDate = new Date(root.currYear, root.currMonth + 1, 1);
-    }
+    onClicked: root.dashState.currentDate = new Date()
 
     ColumnLayout {
         id: inner
 
         anchors.fill: parent
-        anchors.margins: Appearance.padding.large
-        spacing: Appearance.spacing.small
+        anchors.margins: Tokens.padding.large
+        spacing: Tokens.spacing.small
 
         RowLayout {
             id: monthNavigationRow
 
             Layout.fillWidth: true
-            spacing: Appearance.spacing.small
+            spacing: Tokens.spacing.small
 
             Item {
                 implicitWidth: implicitHeight
-                implicitHeight: prevMonthText.implicitHeight + Appearance.padding.small * 2
+                implicitHeight: prevMonthText.implicitHeight + Tokens.padding.small * 2
 
                 StateLayer {
                     id: prevMonthStateLayer
 
-                    radius: Appearance.rounding.full
-
-                    function onClicked(): void {
-                        root.state.currentDate = new Date(root.currYear, root.currMonth - 1, 1);
-                    }
+                    radius: Tokens.rounding.full
+                    onClicked: root.dashState.currentDate = new Date(root.currYear, root.currMonth - 1, 1)
                 }
 
                 MaterialIcon {
@@ -64,7 +61,7 @@ CustomMouseArea {
                     anchors.centerIn: parent
                     text: "chevron_left"
                     color: Colours.palette.m3tertiary
-                    font.pointSize: Appearance.font.size.normal
+                    font.pointSize: Tokens.font.size.normal
                     font.weight: 700
                 }
             }
@@ -72,23 +69,23 @@ CustomMouseArea {
             Item {
                 Layout.fillWidth: true
 
-                implicitWidth: monthYearDisplay.implicitWidth + Appearance.padding.small * 2
-                implicitHeight: monthYearDisplay.implicitHeight + Appearance.padding.small * 2
+                implicitWidth: monthYearDisplay.implicitWidth + Tokens.padding.small * 2
+                implicitHeight: monthYearDisplay.implicitHeight + Tokens.padding.small * 2
 
                 StateLayer {
-                    anchors.fill: monthYearDisplay
-                    anchors.margins: -Appearance.padding.small
-                    anchors.leftMargin: -Appearance.padding.normal
-                    anchors.rightMargin: -Appearance.padding.normal
+                    onClicked: {
+                        root.dashState.currentDate = new Date();
+                    }
 
-                    radius: Appearance.rounding.full
+                    anchors.fill: monthYearDisplay
+                    anchors.margins: -Tokens.padding.small
+                    anchors.leftMargin: -Tokens.padding.normal
+                    anchors.rightMargin: -Tokens.padding.normal
+
+                    radius: Tokens.rounding.full
                     disabled: {
                         const now = new Date();
                         return root.currMonth === now.getMonth() && root.currYear === now.getFullYear();
-                    }
-
-                    function onClicked(): void {
-                        root.state.currentDate = new Date();
                     }
                 }
 
@@ -98,7 +95,7 @@ CustomMouseArea {
                     anchors.centerIn: parent
                     text: grid.title
                     color: Colours.palette.m3primary
-                    font.pointSize: Appearance.font.size.normal
+                    font.pointSize: Tokens.font.size.normal
                     font.weight: 500
                     font.capitalization: Font.Capitalize
                 }
@@ -106,16 +103,16 @@ CustomMouseArea {
 
             Item {
                 implicitWidth: implicitHeight
-                implicitHeight: nextMonthText.implicitHeight + Appearance.padding.small * 2
+                implicitHeight: nextMonthText.implicitHeight + Tokens.padding.small * 2
 
                 StateLayer {
                     id: nextMonthStateLayer
 
-                    radius: Appearance.rounding.full
-
-                    function onClicked(): void {
-                        root.state.currentDate = new Date(root.currYear, root.currMonth + 1, 1);
+                    onClicked: {
+                        root.dashState.currentDate = new Date(root.currYear, root.currMonth + 1, 1);
                     }
+
+                    radius: Tokens.rounding.full
                 }
 
                 MaterialIcon {
@@ -124,7 +121,7 @@ CustomMouseArea {
                     anchors.centerIn: parent
                     text: "chevron_right"
                     color: Colours.palette.m3tertiary
-                    font.pointSize: Appearance.font.size.normal
+                    font.pointSize: Tokens.font.size.normal
                     font.weight: 700
                 }
             }
@@ -167,7 +164,7 @@ CustomMouseArea {
                     required property var model
 
                     implicitWidth: implicitHeight
-                    implicitHeight: text.implicitHeight + Appearance.padding.small * 2
+                    implicitHeight: text.implicitHeight + Tokens.padding.small * 2
 
                     StyledText {
                         id: text
@@ -184,7 +181,7 @@ CustomMouseArea {
                             return Colours.palette.m3onSurfaceVariant;
                         }
                         opacity: dayItem.model.today || dayItem.model.month === grid.month ? 1 : 0.4
-                        font.pointSize: Appearance.font.size.normal
+                        font.pointSize: Tokens.font.size.normal
                         font.weight: 500
                     }
                 }
@@ -208,7 +205,7 @@ CustomMouseArea {
                 implicitHeight: today?.implicitHeight ?? 0
 
                 clip: true
-                radius: Appearance.rounding.full
+                radius: Tokens.rounding.full
                 color: Colours.palette.m3primary
 
                 opacity: todayItem ? 1 : 0
@@ -236,15 +233,13 @@ CustomMouseArea {
 
                 Behavior on x {
                     Anim {
-                        duration: Appearance.anim.durations.expressiveDefaultSpatial
-                        easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                        type: Anim.DefaultSpatial
                     }
                 }
 
                 Behavior on y {
                     Anim {
-                        duration: Appearance.anim.durations.expressiveDefaultSpatial
-                        easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+                        type: Anim.DefaultSpatial
                     }
                 }
             }

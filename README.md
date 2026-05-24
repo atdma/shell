@@ -205,20 +205,66 @@ git pull
 ## Configuring
 
 All configuration options should be put in `~/.config/caelestia/shell.json`. This file is _not_ created by
-default, you must create it manually.
+default, you must create it manually. Options that you omit from the config file will use their default
+values.
+
+### Per-monitor configuration
+
+You can configure options per-monitor in `~/.config/caelestia/monitors/<screen-name>/shell.json`. Options
+set in this file will **override** the respective options in the global config. Otherwise, the options will
+use their values from the global config.
+
+For example, to disable the bar on DP-1:
+
+**`~/.config/caelestia/monitors/DP-1/shell.json`**
+
+```json
+{
+    "bar": {
+        "persistent": false
+    }
+}
+```
+
+> [!NOTE]
+> Not all options are respect per-monitor overrides. Most notably, the following options will only read
+> from the global config, and ignore the respective option in per-monitor config files.
+>
+> <details><summary>Ignored options</summary>
+>
+> - `appearance` (`anim`, `transparency`)
+> - `general` (`logo`, `apps`, `idle`, `battery`)
+> - `bar.workspaces` (`perMonitorWorkspaces`, `specialWorkspaceIcons`, `windowIcons`)
+> - `bar.tray` (`iconSubs`, `hiddenIcons`)
+> - `dashboard` (`mediaUpdateInterval`, `resourceUpdateInterval`)
+> - `launcher` (`specialPrefix`, `actionPrefix`, `enableDangerousActions`, `vimKeybinds`,
+>   `favouriteApps`, `hiddenApps`, `actions`)
+> - `launcher.useFuzzy` (`apps`, `actions`, `schemes`, `variants`, `wallpapers`)
+> - `notifs` (`expire`, `fullscreen`, `defaultExpireTimeout`, `actionOnClick`)
+> - `lock` (`enableFprint`, `maxFprintTries`)
+> - `utilities` (`toasts`, `vpn`)
+> - `services` (`weatherLocation`, `useFahrenheit`, `useFahrenheitPerformance`, `useTwelveHourClock`,
+>   `gpuType`, `visualiserBars`, `audioIncrement`, `brightnessIncrement`, `maxVolume`, `smartScheme`,
+>   `defaultPlayer`, `playerAliases`, `showLyrics`, `lyricsBackend`)
+> - `paths` (`wallpaperDir`, `lyricsDir`)
+>
+> </details>
 
 ### Example configuration
 
 > [!NOTE]
-> The example configuration only includes recommended configuration options. For more advanced customisation
-> such as modifying the size of individual items or changing constants in the code, there are some other
-> options which can be found in the source files in the `config` directory.
+> The example configuration includes ALL configuration options in `shell.json`. You are
+> **not** recommended to copy and paste this entire configuration into `shell.json`.
+> This is meant to serve as a reference of all the available options, and you should
+> only add the ones you want to change to `shell.json`.
 
 <details><summary>Example</summary>
 
 ```json
 {
+    "enabled": true,
     "appearance": {
+        "deformScale": 1,
         "anim": {
             "durations": {
                 "scale": 1
@@ -251,6 +297,10 @@ default, you must create it manually.
         }
     },
     "general": {
+        "logo": "caelestia",
+        "showOverFullscreen": false,
+        "mediaGifSpeedAdjustment": 300,
+        "sessionGifSpeed": 0.7,
         "apps": {
             "terminal": ["foot"],
             "audio": ["pavucontrol"],
@@ -328,7 +378,14 @@ default, you must create it manually.
         }
     },
     "bar": {
+        "activeWindow": {
+            "compact": false,
+            "inverted": false,
+            "showOnHover": true
+        },
         "clock": {
+            "background": false,
+            "showDate": false,
             "showIcon": true
         },
         "dragThreshold": 20,
@@ -413,6 +470,12 @@ default, you must create it manually.
                     "name": "steam",
                     "icon": "sports_esports"
                 }
+            ],
+            "windowIcons": [
+                {
+                    "regex": "steam(_app_(default|[0-9]+))?",
+                    "icon": "sports_esports"
+                }
             ]
         },
         "excludedScreens": [""],
@@ -422,13 +485,18 @@ default, you must create it manually.
     },
     "border": {
         "rounding": 25,
+        "smoothing": 32,
         "thickness": 10
     },
     "dashboard": {
         "enabled": true,
+        "showOnHover": true,
+        "showDashboard": true,
+        "showMedia": true,
+        "showPerformance": true,
+        "showWeather": true,
         "dragThreshold": 50,
-        "mediaUpdateInterval": 500,
-        "showOnHover": true
+        "mediaUpdateInterval": 500
     },
     "launcher": {
         "actionPrefix": ">",
@@ -560,10 +628,12 @@ default, you must create it manually.
             "wallpapers": false
         },
         "showOnHover": false,
+        "favouriteApps": [],
         "hiddenApps": []
     },
     "lock": {
-        "recolourLogo": false
+        "recolourLogo": false,
+        "hideNotifs": false
     },
     "notifs": {
         "actionOnClick": false,
@@ -582,7 +652,10 @@ default, you must create it manually.
     "paths": {
         "mediaGif": "root:/assets/bongocat.gif",
         "sessionGif": "root:/assets/kurukuru.gif",
-        "wallpaperDir": "~/Pictures/Wallpapers"
+        "noNotifsPic": "root:/assets/dino.png",
+        "lockNoNotifsPic": "root:/assets/dino.png",
+        "wallpaperDir": "~/Pictures/Wallpapers",
+        "lyricsDir": "~/Music/lyrics"
     },
     "services": {
         "audioIncrement": 0.1,
@@ -593,6 +666,7 @@ default, you must create it manually.
         "playerAliases": [{ "from": "com.github.th_ch.youtube_music", "to": "YT Music" }],
         "weatherLocation": "",
         "useFahrenheit": false,
+        "useFahrenheitPerformance": false,
         "useTwelveHourClock": false,
         "smartScheme": true,
         "visualiserBars": 45
@@ -601,6 +675,12 @@ default, you must create it manually.
         "dragThreshold": 30,
         "enabled": true,
         "vimKeybinds": false,
+        "icons": {
+            "logout": "logout",
+            "shutdown": "power_settings_new",
+            "hibernate": "downloading",
+            "reboot": "cached"
+        },
         "commands": {
             "logout": ["loginctl", "terminate-user", ""],
             "shutdown": ["systemctl", "poweroff"],
@@ -639,12 +719,58 @@ default, you must create it manually.
                     "enabled": false
                 }
             ]
-        }
+        },
+        "quickToggles": [
+            {
+                "id": "wifi",
+                "enabled": true
+            },
+            {
+                "id": "bluetooth",
+                "enabled": true
+            },
+            {
+                "id": "mic",
+                "enabled": true
+            },
+            {
+                "enabled": true,
+                "id": "settings"
+            },
+            {
+                "id": "gameMode",
+                "enabled": true
+            },
+            {
+                "id": "dnd",
+                "enabled": true
+            },
+            {
+                "id": "vpn",
+                "enabled": true
+            }
+        ]
     }
 }
 ```
 
 </details>
+
+### Advanced configuration
+
+> [!WARNING]
+> Do NOT change any of these options if you do not know what you are doing. These options control the
+> tokens used internally within the shell, and can cause visual issues if changed. The existence of
+> the options are also not guaranteed across versions, and may change or be removed without notice.
+
+A separate `~/.config/caelestia/shell-tokens.json` file allows editing the internal tokens without
+touching the source code of the shell. These tokens affect, for example, individual rounding,
+spacing, padding, font size, animation duration and easing curves tokens, and the sizes of certain
+components. The appearance scale values in `shell.json` are multiplied against these base
+token values to produce the final computed values.
+
+Per-monitor token overrides are also available at
+`~/.config/caelestia/monitors/<screen-name>/shell-tokens.json`.
 
 ### Home Manager Module
 

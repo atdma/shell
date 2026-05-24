@@ -1,25 +1,26 @@
 pragma ComponentBehavior: Bound
 
-import qs.components
-import qs.components.controls
-import qs.components.containers
-import qs.components.effects
-import qs.services
-import qs.config
-import Quickshell
-import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
+import Quickshell.Widgets
+import Caelestia.Config
+import qs.components
+import qs.components.containers
+import qs.components.controls
+import qs.components.effects
+import qs.services
+import qs.utils
 
 Item {
     id: root
 
     required property Props props
-    required property var visibilities
+    required property DrawerVisibilities visibilities
     readonly property int notifCount: Notifs.list.reduce((acc, n) => n.closed ? acc : acc + 1, 0)
 
     anchors.fill: parent
-    anchors.margins: Appearance.padding.normal
+    anchors.margins: Tokens.padding.normal
 
     Component.onCompleted: Notifs.list.forEach(n => n.popup = false)
 
@@ -29,7 +30,7 @@ Item {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.margins: Appearance.padding.small
+        anchors.margins: Tokens.padding.small
 
         implicitHeight: Math.max(count.implicitHeight, titleText.implicitHeight)
 
@@ -43,8 +44,8 @@ Item {
 
             text: root.notifCount
             color: Colours.palette.m3outline
-            font.pointSize: Appearance.font.size.normal
-            font.family: Appearance.font.family.mono
+            font.pointSize: Tokens.font.size.normal
+            font.family: Tokens.font.family.mono
             font.weight: 500
 
             Behavior on anchors.leftMargin {
@@ -62,12 +63,12 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: count.right
             anchors.right: parent.right
-            anchors.leftMargin: Appearance.spacing.small
+            anchors.leftMargin: Tokens.spacing.small
 
             text: root.notifCount > 0 ? qsTr("notification%1").arg(root.notifCount === 1 ? "" : "s") : qsTr("Notifications")
             color: Colours.palette.m3outline
-            font.pointSize: Appearance.font.size.normal
-            font.family: Appearance.font.family.mono
+            font.pointSize: Tokens.font.size.normal
+            font.family: Tokens.font.family.mono
             font.weight: 500
             elide: Text.ElideRight
         }
@@ -80,24 +81,25 @@ Item {
         anchors.right: parent.right
         anchors.top: title.bottom
         anchors.bottom: parent.bottom
-        anchors.topMargin: Appearance.spacing.smaller
+        anchors.topMargin: Tokens.spacing.smaller
 
-        radius: Appearance.rounding.small
+        radius: Tokens.rounding.small
         color: "transparent"
 
         Loader {
+            asynchronous: true
             anchors.centerIn: parent
             active: opacity > 0
             opacity: root.notifCount > 0 ? 0 : 1
 
             sourceComponent: ColumnLayout {
-                spacing: Appearance.spacing.large
+                spacing: Tokens.spacing.large
 
                 Image {
                     asynchronous: true
-                    source: Qt.resolvedUrl(`${Quickshell.shellDir}/assets/dino.png`)
+                    source: Paths.absolutePath(Config.paths.noNotifsPic)
                     fillMode: Image.PreserveAspectFit
-                    sourceSize.width: clipRect.width * 0.8
+                    sourceSize.width: clipRect.width * 0.8 * ((QsWindow.window as QsWindow)?.devicePixelRatio ?? 1)
 
                     layer.enabled: true
                     layer.effect: Colouriser {
@@ -110,15 +112,15 @@ Item {
                     Layout.alignment: Qt.AlignHCenter
                     text: qsTr("No Notifications")
                     color: Colours.palette.m3outlineVariant
-                    font.pointSize: Appearance.font.size.large
-                    font.family: Appearance.font.family.mono
+                    font.pointSize: Tokens.font.size.large
+                    font.family: Tokens.font.family.mono
                     font.weight: 500
                 }
             }
 
             Behavior on opacity {
                 Anim {
-                    duration: Appearance.anim.durations.extraLarge
+                    type: Anim.StandardExtraLarge
                 }
             }
         }
@@ -150,25 +152,33 @@ Item {
         id: clearTimer
 
         repeat: true
-        interval: 50
+        triggeredOnStart: true
+        interval: Math.max(15, Math.min(80, 69.8 - 12.3 * Math.log(Notifs.notClosed.length)))
         onTriggered: {
-            let next = null;
-            for (let i = 0; i < notifList.repeater.count; i++) {
-                next = notifList.repeater.itemAt(i);
-                if (!next?.closed)
-                    break;
-            }
-            if (next)
-                next.closeAll();
-            else
+            const first = Notifs.notClosed[0];
+            if (!first) {
                 stop();
+                return;
+            }
+
+            const appName = first.appName;
+            let cleared = 0;
+            for (const n of Notifs.notClosed.filter(n => n.appName === appName)) {
+                n.close();
+                cleared++;
+                if (cleared > 30) {
+                    interval = 5;
+                    return;
+                }
+            }
         }
     }
 
     Loader {
+        asynchronous: true
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.margins: Appearance.padding.normal
+        anchors.margins: Tokens.padding.normal
 
         scale: root.notifCount > 0 ? 1 : 0.5
         opacity: root.notifCount > 0 ? 1 : 0
@@ -178,9 +188,9 @@ Item {
             id: clearBtn
 
             icon: "clear_all"
-            radius: Appearance.rounding.normal
-            padding: Appearance.padding.normal
-            font.pointSize: Math.round(Appearance.font.size.large * 1.2)
+            radius: Tokens.rounding.normal
+            padding: Tokens.padding.normal
+            font.pointSize: Math.round(Tokens.font.size.large * 1.2)
             onClicked: clearTimer.start()
 
             Elevation {
@@ -193,14 +203,13 @@ Item {
 
         Behavior on scale {
             Anim {
-                duration: Appearance.anim.durations.expressiveFastSpatial
-                easing.bezierCurve: Appearance.anim.curves.expressiveFastSpatial
+                type: Anim.FastSpatial
             }
         }
 
         Behavior on opacity {
             Anim {
-                duration: Appearance.anim.durations.expressiveFastSpatial
+                duration: Tokens.anim.durations.expressiveFastSpatial
             }
         }
     }

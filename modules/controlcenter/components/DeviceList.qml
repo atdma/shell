@@ -1,14 +1,14 @@
 pragma ComponentBehavior: Bound
 
 import ".."
-import qs.components
-import qs.components.controls
-import qs.components.containers
-import qs.services
-import qs.config
-import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
+import Caelestia.Config
+import qs.components
+import qs.components.containers
+import qs.components.controls
+import qs.services
 
 ColumnLayout {
     id: root
@@ -23,15 +23,17 @@ ColumnLayout {
     property Component headerComponent: null
     property Component titleSuffix: null
     property bool showHeader: true
+    property alias view: view
 
     signal itemSelected(var item)
 
-    spacing: Appearance.spacing.small
+    spacing: Tokens.spacing.small
 
     Loader {
         id: headerLoader
 
         Layout.fillWidth: true
+        asynchronous: true
         sourceComponent: root.headerComponent
         visible: root.headerComponent !== null && root.showHeader
     }
@@ -39,17 +41,18 @@ ColumnLayout {
     RowLayout {
         Layout.fillWidth: true
         Layout.topMargin: root.headerComponent ? 0 : 0
-        spacing: Appearance.spacing.small
+        spacing: Tokens.spacing.small
         visible: root.title !== "" || root.description !== ""
 
         StyledText {
             visible: root.title !== ""
             text: root.title
-            font.pointSize: Appearance.font.size.large
+            font.pointSize: Tokens.font.size.large
             font.weight: 500
         }
 
         Loader {
+            asynchronous: true
             sourceComponent: root.titleSuffix
             visible: root.titleSuffix !== null
         }
@@ -58,8 +61,6 @@ ColumnLayout {
             Layout.fillWidth: true
         }
     }
-
-    property alias view: view
 
     StyledText {
         visible: root.description !== ""
@@ -77,7 +78,7 @@ ColumnLayout {
         model: root.model
         delegate: root.delegate
 
-        spacing: Appearance.spacing.small / 2
+        spacing: Tokens.spacing.small / 2
         interactive: false
         clip: false
     }

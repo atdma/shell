@@ -2,23 +2,23 @@ pragma ComponentBehavior: Bound
 
 import ".."
 import "../components"
-import qs.components
-import qs.components.controls
-import qs.components.containers
-import qs.components.effects
-import qs.services
-import qs.config
-import Quickshell
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Quickshell
+import Caelestia.Config
+import qs.components
+import qs.components.containers
+import qs.components.controls
+import qs.components.effects
+import qs.services
 
 ColumnLayout {
     id: root
 
     required property Session session
 
-    spacing: Appearance.spacing.normal
+    spacing: Tokens.spacing.normal
 
     SettingsHeader {
         icon: "vpn_key"
@@ -26,7 +26,7 @@ ColumnLayout {
     }
 
     SectionHeader {
-        Layout.topMargin: Appearance.spacing.large
+        Layout.topMargin: Tokens.spacing.large
         title: qsTr("General")
         description: qsTr("VPN configuration")
     }
@@ -34,32 +34,31 @@ ColumnLayout {
     SectionContainer {
         ToggleRow {
             label: qsTr("VPN enabled")
-            checked: Config.utilities.vpn.enabled
+            checked: GlobalConfig.utilities.vpn.enabled
             toggle.onToggled: {
-                Config.utilities.vpn.enabled = checked;
-                Config.save();
+                GlobalConfig.utilities.vpn.enabled = checked;
             }
         }
     }
 
     SectionHeader {
-        Layout.topMargin: Appearance.spacing.large
+        Layout.topMargin: Tokens.spacing.large
         title: qsTr("Providers")
         description: qsTr("Manage VPN providers")
     }
 
     SectionContainer {
-        contentSpacing: Appearance.spacing.normal
+        contentSpacing: Tokens.spacing.normal
 
         ListView {
             Layout.fillWidth: true
             Layout.preferredHeight: contentHeight
 
             interactive: false
-            spacing: Appearance.spacing.smaller
+            spacing: Tokens.spacing.smaller
 
             model: ScriptModel {
-                values: Config.utilities.vpn.provider.map((provider, index) => {
+                values: GlobalConfig.utilities.vpn.provider.map((provider, index) => {
                     const isObject = typeof provider === "object";
                     const name = isObject ? (provider.name || "custom") : String(provider);
                     const displayName = isObject ? (provider.displayName || name) : name;
@@ -82,19 +81,20 @@ ColumnLayout {
                     required property int index
 
                     width: ListView.view ? ListView.view.width : undefined
+                    implicitHeight: 60
                     color: Colours.tPalette.m3surfaceContainerHigh
-                    radius: Appearance.rounding.normal
+                    radius: Tokens.rounding.normal
 
                     RowLayout {
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.verticalCenter: parent.verticalCenter
-                        anchors.margins: Appearance.padding.normal
-                        spacing: Appearance.spacing.normal
+                        anchors.margins: Tokens.padding.normal
+                        spacing: Tokens.spacing.normal
 
                         MaterialIcon {
                             text: modelData.isActive ? "vpn_key" : "vpn_key_off"
-                            font.pointSize: Appearance.font.size.large
+                            font.pointSize: Tokens.font.size.large
                             color: modelData.isActive ? Colours.palette.m3primary : Colours.palette.m3outline
                         }
 
@@ -109,53 +109,81 @@ ColumnLayout {
 
                             StyledText {
                                 text: qsTr("%1 • %2").arg(modelData.name).arg(modelData.interface || qsTr("No interface"))
-                                font.pointSize: Appearance.font.size.small
+                                font.pointSize: Tokens.font.size.small
                                 color: Colours.palette.m3outline
                             }
                         }
 
                         IconButton {
                             icon: modelData.isActive ? "arrow_downward" : "arrow_upward"
-                            visible: !modelData.isActive || Config.utilities.vpn.provider.length > 1
+                            visible: !modelData.isActive || GlobalConfig.utilities.vpn.provider.length > 1
                             onClicked: {
-                                if (modelData.isActive && index < Config.utilities.vpn.provider.length - 1) {
+                                const providers = [];
+                                for (let i = 0; i < GlobalConfig.utilities.vpn.provider.length; i++) {
+                                    const p = GlobalConfig.utilities.vpn.provider[i];
+                                    const reconstructed = {
+                                        name: p.name,
+                                        displayName: p.displayName,
+                                        interface: p.interface,
+                                        enabled: p.enabled
+                                    };
+                                    if (p.connectCmd && p.connectCmd.length > 0) {
+                                        reconstructed.connectCmd = p.connectCmd;
+                                    }
+                                    if (p.disconnectCmd && p.disconnectCmd.length > 0) {
+                                        reconstructed.disconnectCmd = p.disconnectCmd;
+                                    }
+                                    providers.push(reconstructed);
+                                }
+
+                                if (modelData.isActive && index < providers.length - 1) {
                                     // Move down
-                                    const providers = [...Config.utilities.vpn.provider];
                                     const temp = providers[index];
                                     providers[index] = providers[index + 1];
                                     providers[index + 1] = temp;
-                                    Config.utilities.vpn.provider = providers;
-                                    Config.save();
                                 } else if (!modelData.isActive) {
                                     // Make active (move to top)
-                                    const providers = [...Config.utilities.vpn.provider];
                                     const provider = providers.splice(index, 1)[0];
                                     providers.unshift(provider);
-                                    Config.utilities.vpn.provider = providers;
-                                    Config.save();
                                 }
+
+                                GlobalConfig.utilities.vpn.provider = providers;
                             }
                         }
 
                         IconButton {
                             icon: "delete"
                             onClicked: {
-                                const providers = [...Config.utilities.vpn.provider];
-                                providers.splice(index, 1);
-                                Config.utilities.vpn.provider = providers;
-                                Config.save();
+                                const providers = [];
+                                for (let i = 0; i < GlobalConfig.utilities.vpn.provider.length; i++) {
+                                    if (i !== index) {
+                                        const p = GlobalConfig.utilities.vpn.provider[i];
+                                        const reconstructed = {
+                                            name: p.name,
+                                            displayName: p.displayName,
+                                            interface: p.interface,
+                                            enabled: p.enabled
+                                        };
+                                        if (p.connectCmd && p.connectCmd.length > 0) {
+                                            reconstructed.connectCmd = p.connectCmd;
+                                        }
+                                        if (p.disconnectCmd && p.disconnectCmd.length > 0) {
+                                            reconstructed.disconnectCmd = p.disconnectCmd;
+                                        }
+                                        providers.push(reconstructed);
+                                    }
+                                }
+                                GlobalConfig.utilities.vpn.provider = providers;
                             }
                         }
                     }
-
-                    implicitHeight: 60
                 }
             }
         }
 
         TextButton {
             Layout.fillWidth: true
-            Layout.topMargin: Appearance.spacing.normal
+            Layout.topMargin: Tokens.spacing.normal
             text: qsTr("+ Add Provider")
             inactiveColour: Colours.palette.m3primaryContainer
             inactiveOnColour: Colours.palette.m3onPrimaryContainer
@@ -167,13 +195,13 @@ ColumnLayout {
     }
 
     SectionHeader {
-        Layout.topMargin: Appearance.spacing.large
+        Layout.topMargin: Tokens.spacing.large
         title: qsTr("Quick Add")
         description: qsTr("Add common VPN providers")
     }
 
     SectionContainer {
-        contentSpacing: Appearance.spacing.smaller
+        contentSpacing: Tokens.spacing.smaller
 
         TextButton {
             Layout.fillWidth: true
@@ -182,14 +210,13 @@ ColumnLayout {
             inactiveOnColour: Colours.palette.m3onSurface
 
             onClicked: {
-                const providers = [...Config.utilities.vpn.provider];
+                const providers = [...GlobalConfig.utilities.vpn.provider];
                 providers.push({
                     name: "netbird",
                     displayName: "NetBird",
                     interface: "wt0"
                 });
-                Config.utilities.vpn.provider = providers;
-                Config.save();
+                GlobalConfig.utilities.vpn.provider = providers;
             }
         }
 
@@ -200,14 +227,13 @@ ColumnLayout {
             inactiveOnColour: Colours.palette.m3onSurface
 
             onClicked: {
-                const providers = [...Config.utilities.vpn.provider];
+                const providers = [...GlobalConfig.utilities.vpn.provider];
                 providers.push({
                     name: "tailscale",
                     displayName: "Tailscale",
                     interface: "tailscale0"
                 });
-                Config.utilities.vpn.provider = providers;
-                Config.save();
+                GlobalConfig.utilities.vpn.provider = providers;
             }
         }
 
@@ -218,14 +244,13 @@ ColumnLayout {
             inactiveOnColour: Colours.palette.m3onSurface
 
             onClicked: {
-                const providers = [...Config.utilities.vpn.provider];
+                const providers = [...GlobalConfig.utilities.vpn.provider];
                 providers.push({
                     name: "warp",
                     displayName: "Cloudflare WARP",
                     interface: "CloudflareWARP"
                 });
-                Config.utilities.vpn.provider = providers;
-                Config.save();
+                GlobalConfig.utilities.vpn.provider = providers;
             }
         }
     }

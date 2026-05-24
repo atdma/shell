@@ -1,9 +1,9 @@
 pragma Singleton
 
+import QtQuick
+import Quickshell
 import qs.components
 import qs.services
-import Quickshell
-import QtQuick
 
 Singleton {
     id: root
@@ -47,11 +47,8 @@ Singleton {
 
                 anchors.fill: parent
                 screen: win.screen
+                onClose: win.destroy()
                 floating: true
-
-                function close(): void {
-                    win.destroy();
-                }
             }
 
             Behavior on color {
