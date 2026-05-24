@@ -7,7 +7,13 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
 import Caelestia.Config
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+import Quickshell.Widgets
+import Caelestia.Config
 import qs.components
+import qs.components.containers
 import qs.components.containers
 import qs.components.controls
 import qs.components.effects
@@ -22,6 +28,8 @@ Item {
     property bool activeWindowCompact: Config.bar.activeWindow.compact ?? false
     property bool activeWindowInverted: Config.bar.activeWindow.inverted ?? false
     property bool clockShowIcon: Config.bar.clock.showIcon ?? true
+    property bool clockBackground: Config.bar.clock.background ?? false
+    property bool clockShowDate: Config.bar.clock.showDate ?? false
     property bool clockBackground: Config.bar.clock.background ?? false
     property bool clockShowDate: Config.bar.clock.showDate ?? false
     property bool persistent: Config.bar.persistent ?? true
@@ -42,6 +50,8 @@ Item {
     property bool workspacesActiveIndicator: Config.bar.workspaces.activeIndicator ?? true
     property bool workspacesOccupiedBg: Config.bar.workspaces.occupiedBg ?? false
     property bool workspacesShowWindows: Config.bar.workspaces.showWindows ?? false
+    property int workspacesMaxWindowIcons: Config.bar.workspaces.maxWindowIcons ?? 0
+    property bool workspacesPerMonitor: GlobalConfig.bar.workspaces.perMonitorWorkspaces ?? true
     property int workspacesMaxWindowIcons: Config.bar.workspaces.maxWindowIcons ?? 0
     property bool workspacesPerMonitor: GlobalConfig.bar.workspaces.perMonitorWorkspaces ?? true
     property bool scrollWorkspaces: Config.bar.scrollActions.workspaces ?? true
@@ -161,9 +171,9 @@ Item {
             flickableDirection: Flickable.VerticalFlick
             contentHeight: sidebarLayout.height
 
-            StyledScrollBar.vertical: StyledScrollBar {
-                flickable: sidebarFlickable
-            }
+                StyledScrollBar.vertical: StyledScrollBar {
+                    flickable: leftFlickable
+                }
 
             ColumnLayout {
                 id: sidebarLayout
@@ -278,9 +288,9 @@ Item {
                         Layout.alignment: Qt.AlignTop
                         spacing: Tokens.spacing.normal
 
-                        SectionContainer {
-                            Layout.fillWidth: true
-                            alignTop: true
+            SectionContainer {
+                Layout.fillWidth: true
+                alignTop: true
 
                             StyledText {
                                 text: qsTr("Workspaces")
@@ -545,9 +555,9 @@ Item {
                         Layout.alignment: Qt.AlignTop
                         spacing: Tokens.spacing.normal
 
-                        SectionContainer {
-                            Layout.fillWidth: true
-                            alignTop: true
+            SectionContainer {
+                Layout.fillWidth: true
+                alignTop: true
 
                             StyledText {
                                 text: qsTr("Clock")
@@ -572,15 +582,24 @@ Item {
                                 }
                             }
 
-                            SwitchRow {
-                                label: qsTr("Show clock icon")
-                                checked: root.clockShowIcon
-                                onToggled: checked => {
-                                    root.clockShowIcon = checked;
-                                    root.saveConfig();
-                                }
-                            }
-                        }
+                SwitchRow {
+                    label: qsTr("Show clock icon")
+                    checked: root.clockShowIcon
+                    onToggled: checked => {
+                        root.clockShowIcon = checked;
+                        root.saveConfig();
+                    }
+                }
+            }
+        }
+    }
+
+    Component {
+        id: behaviorComponent
+
+        SectionPage {
+            title: qsTr("Bar Behavior")
+            subtitle: qsTr("Control when the bar appears and how drag reveal feels.")
 
                         SectionContainer {
                             Layout.fillWidth: true
@@ -591,23 +610,24 @@ Item {
                                 font.pointSize: Tokens.font.size.normal
                             }
 
-                            SwitchRow {
-                                label: qsTr("Persistent")
-                                checked: root.persistent
-                                onToggled: checked => {
-                                    root.persistent = checked;
-                                    root.saveConfig();
-                                }
-                            }
+                SwitchRow {
+                    label: qsTr("Persistent")
+                    checked: root.persistent
+                    onToggled: checked => {
+                        root.persistent = checked;
+                        root.saveConfig();
+                    }
+                }
 
-                            SwitchRow {
-                                label: qsTr("Show on hover")
-                                checked: root.showOnHover
-                                onToggled: checked => {
-                                    root.showOnHover = checked;
-                                    root.saveConfig();
-                                }
-                            }
+                SwitchRow {
+                    label: qsTr("Show on hover")
+                    checked: root.showOnHover
+                    onToggled: checked => {
+                        root.showOnHover = checked;
+                        root.saveConfig();
+                    }
+                }
+            }
 
                             SectionContainer {
                                 contentSpacing: Tokens.spacing.normal
@@ -671,42 +691,51 @@ Item {
                         Layout.alignment: Qt.AlignTop
                         spacing: Tokens.spacing.normal
 
-                        SectionContainer {
-                            Layout.fillWidth: true
-                            alignTop: true
+            SectionContainer {
+                Layout.fillWidth: true
+                alignTop: true
 
                             StyledText {
                                 text: qsTr("Popouts")
                                 font.pointSize: Tokens.font.size.normal
                             }
 
-                            SwitchRow {
-                                label: qsTr("Active window")
-                                checked: root.popoutActiveWindow
-                                onToggled: checked => {
-                                    root.popoutActiveWindow = checked;
-                                    root.saveConfig();
-                                }
-                            }
+                SwitchRow {
+                    label: qsTr("Active window")
+                    checked: root.popoutActiveWindow
+                    onToggled: checked => {
+                        root.popoutActiveWindow = checked;
+                        root.saveConfig();
+                    }
+                }
 
-                            SwitchRow {
-                                label: qsTr("Tray")
-                                checked: root.popoutTray
-                                onToggled: checked => {
-                                    root.popoutTray = checked;
-                                    root.saveConfig();
-                                }
-                            }
+                SwitchRow {
+                    label: qsTr("Tray")
+                    checked: root.popoutTray
+                    onToggled: checked => {
+                        root.popoutTray = checked;
+                        root.saveConfig();
+                    }
+                }
 
-                            SwitchRow {
-                                label: qsTr("Status icons")
-                                checked: root.popoutStatusIcons
-                                onToggled: checked => {
-                                    root.popoutStatusIcons = checked;
-                                    root.saveConfig();
-                                }
-                            }
-                        }
+                SwitchRow {
+                    label: qsTr("Status icons")
+                    checked: root.popoutStatusIcons
+                    onToggled: checked => {
+                        root.popoutStatusIcons = checked;
+                        root.saveConfig();
+                    }
+                }
+            }
+        }
+    }
+
+    Component {
+        id: trayComponent
+
+        SectionPage {
+            title: qsTr("Tray Settings")
+            subtitle: qsTr("Change the system tray presentation.")
 
                         SectionContainer {
                             Layout.fillWidth: true

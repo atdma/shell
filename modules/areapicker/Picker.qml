@@ -71,20 +71,23 @@ MouseArea {
         }
     }
 
-    function save(): void {
-        const tmpfile = Qt.resolvedUrl(`/tmp/caelestia-picker-${Quickshell.processId}-${Date.now()}.png`);
-        CUtils.saveItem(screencopy, tmpfile, Qt.rect(Math.ceil(rsx), Math.ceil(rsy), Math.floor(sw), Math.floor(sh)), path => {
-            if (root.loader.clipboardOnly) {
-                Quickshell.execDetached(["sh", "-c", "wl-copy --type image/png < " + path]);
-                Quickshell.execDetached(["notify-send", "-a", "caelestia-cli", "-i", path, "Screenshot taken", "Screenshot copied to clipboard"]);
-            } else {
-                Quickshell.execDetached(["swappy", "-f", path]);
-            }
-            closeAnim.start();
-        });
-    }
+   function save(): void {
+    const tmpfile = Qt.resolvedUrl(`/tmp/caelestia-picker-${Quickshell.processId}-${Date.now()}.png`);
+    CUtils.saveItem(screencopy, tmpfile, Qt.rect(Math.ceil(rsx), Math.ceil(rsy), Math.floor(sw), Math.floor(sh)), path => {
+        if (root.loader.clipboardOnly) {
+            Quickshell.execDetached(["sh", "-c", "wl-copy --type image/png < " + path]);
+            Quickshell.execDetached(["notify-send", "-a", "caelestia-cli", "-i", path, "Screenshot taken", "Screenshot copied to clipboard"]);
+        } else {
+            Quickshell.execDetached(["swappy", "-f", path]);
+        }
+        closeAnim.start();
+    }, () => {
+        console.error("Failed to save screenshot");
+        closeAnim.start();
+    })
+}
 
-    onClientsChanged: checkClientRects(mouseX, mouseY)
+onClientsChanged: checkClientRects(mouseX, mouseY)
 
     anchors.fill: parent
     opacity: 0
@@ -214,6 +217,13 @@ MouseArea {
             captureSource: root.screen
 
             onHasContentChanged: {
+                if (hasContent && !root.loader.freeze) {
+                    overlay.visible = border.visible = true;
+                    root.save();
+                }
+            }
+
+            Component.onCompleted: {
                 if (hasContent && !root.loader.freeze) {
                     overlay.visible = border.visible = true;
                     root.save();
