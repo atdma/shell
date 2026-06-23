@@ -24,16 +24,47 @@ StyledRect {
     property bool actuallyRecording: Recorder.running
     readonly property bool recordingBusy: Recorder.running || Recorder.starting
     property string lastError: ""
-    property string currentVideoMode: Recorder.videoMode || Config.utilities.recording.videoMode || "fullscreen"
+    property string currentVideoMode: Recorder.videoMode || GlobalConfig.utilities.recording.videoMode || "fullscreen"
 
     // Computed audio mode based on settings
     readonly property string currentAudioMode: {
-        const recordSystem = Config.utilities.recording.recordSystem;
-        const recordMic = Config.utilities.recording.recordMicrophone;
+        const recordSystem = GlobalConfig.utilities.recording.recordSystem;
+        const recordMic = GlobalConfig.utilities.recording.recordMicrophone;
         if (recordSystem && recordMic) return "combined";
         if (recordSystem) return "system";
         if (recordMic) return "mic";
         return "none";
+    }
+
+    function startRecording(mode) {
+        GlobalConfig.utilities.recording.videoMode = mode;
+        root.currentVideoMode = mode;
+        GlobalConfig.save();
+        Recorder.start(mode, root.currentAudioMode);
+    }
+
+    function startingText(mode) {
+        return qsTr("Starting %1...").arg(videoModeLabel(mode));
+    }
+
+    function videoModeLabel(mode) {
+        if (mode === "fullscreen") return qsTr("fullscreen");
+        if (mode === "region") return qsTr("region");
+        if (mode === "window") return qsTr("window");
+        return mode;
+    }
+
+    function audioModeLabel(mode) {
+        if (mode === "combined") return qsTr("system + mic");
+        if (mode === "system") return qsTr("system audio");
+        if (mode === "mic") return qsTr("microphone");
+        return qsTr("no audio");
+    }
+
+    Connections {
+        target: Recorder
+        function onErrorOccurred(errorMsg) { root.lastError = errorMsg; }
+        function onRecordingStarted() { root.lastError = ""; }
     }
 
     ColumnLayout {
@@ -55,7 +86,7 @@ StyledRect {
                     return h - (h % 2);
                 }
 
-                radius: Appearance.rounding.full
+                radius: Tokens.rounding.full
                 color: root.recordingBusy ? Colours.palette.m3secondary : Colours.palette.m3secondaryContainer
 
                 MaterialIcon {
@@ -94,7 +125,7 @@ StyledRect {
                         return qsTr("Recording off");
                     }
                     color: root.lastError !== "" ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
-                    font.pointSize: Tokens.font.body.small
+                    font: Tokens.font.body.small
                     elide: Text.ElideRight
                     animate: true
                 }
@@ -102,11 +133,11 @@ StyledRect {
 
             SplitButton {
                 disabled: root.recordingBusy
-                active: menuItems.find(m => m.mode === Config.utilities.recording.videoMode) ?? menuItems[0]
+                active: menuItems.find(m => m.mode === GlobalConfig.utilities.recording.videoMode) ?? menuItems[0]
                 menu.onItemSelected: item => {
-                    Config.utilities.recording.videoMode = item.mode;
+                    GlobalConfig.utilities.recording.videoMode = item.mode;
                     root.currentVideoMode = item.mode;
-                    Config.save();
+                    GlobalConfig.save();
                 }
 
                 menuItems: [
@@ -115,21 +146,21 @@ StyledRect {
                         icon: "fullscreen"
                         text: qsTr("Record fullscreen")
                         activeText: qsTr("Fullscreen")
-                        onClicked: startRecording(mode)
+                        onClicked: root.startRecording(mode)
                     },
                     MenuItem {
                         property string mode: "region"
                         icon: "screenshot_region"
                         text: qsTr("Record region")
                         activeText: qsTr("Region")
-                        onClicked: startRecording(mode)
+                        onClicked: root.startRecording(mode)
                     },
                     MenuItem {
                         property string mode: "window"
                         icon: "web_asset"
                         text: qsTr("Record window")
                         activeText: qsTr("Window")
-                        onClicked: startRecording(mode)
+                        onClicked: root.startRecording(mode)
                     }
                 ]
             }
@@ -139,22 +170,22 @@ StyledRect {
             id: errorBanner
             Layout.fillWidth: true
             visible: root.lastError !== ""
-            implicitHeight: visible ? errorText.implicitHeight + Appearance.padding.normal * 2 : 0
-            radius: Appearance.rounding.small
+            implicitHeight: visible ? errorText.implicitHeight + Tokens.padding.medium * 2 : 0
+            radius: Tokens.rounding.small
             color: Colours.palette.m3errorContainer
 
             StyledText {
                 id: errorText
                 anchors.fill: parent
-                anchors.margins: Appearance.padding.normal
+                anchors.margins: Tokens.padding.medium
                 text: root.lastError
                 color: Colours.palette.m3onErrorContainer
                 wrapMode: Text.Wrap
-                font.pointSize: Appearance.font.size.small
+                font: Tokens.font.body.small
             }
 
             Behavior on implicitHeight {
-                Anim { duration: Appearance.anim.durations.small }
+                Anim { duration: Tokens.anim.durations.small }
             }
         }
 
@@ -162,14 +193,14 @@ StyledRect {
         ColumnLayout {
             Layout.fillWidth: true
             visible: !root.recordingBusy
-            spacing: Appearance.spacing.small
+            spacing: Tokens.spacing.small
 
             RowLayout {
-                spacing: Appearance.spacing.small
+                spacing: Tokens.spacing.small
 
                 StyledText {
                     text: qsTr("Audio Sources")
-                    font.pointSize: Appearance.font.size.small
+                    font: Tokens.font.body.small
                     color: Colours.palette.m3onSurfaceVariant
                 }
 
@@ -199,115 +230,109 @@ StyledRect {
                     id: audioSourcesLayout
 
                     width: parent.width
-                    y: root.props.recordingAudioExpanded ? 0 : -Appearance.spacing.small
-                    spacing: Appearance.spacing.smaller
+                    y: root.props.recordingAudioExpanded ? 0 : -Tokens.spacing.small
+                    spacing: Tokens.spacing.extraSmall
 
-                // System Audio (Default Sink)
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.normal
-
-                    StyledSwitch {
-                        checked: Config.utilities.recording.recordSystem
-                        onToggled: {
-                            Config.utilities.recording.recordSystem = checked;
-                            Config.save();
-                        }
-                    }
-
-                    StyledText {
-                        Layout.preferredWidth: 85
-                        text: qsTr("System")
-                        font.pointSize: Appearance.font.size.small
-                        elide: Text.ElideRight
-                    }
-
-                    StyledSlider {
-                        id: systemVolumeSlider
+                    // System Audio (Default Sink)
+                    RowLayout {
                         Layout.fillWidth: true
-                        implicitHeight: 24
-                        opacity: Config.utilities.recording.recordSystem ? 1.0 : 0.5
-                        from: 0
-                        to: 1
-                        value: Audio.volume
-                        onMoved: {
-                            Audio.setVolume(value);
+                        spacing: Tokens.spacing.medium
+
+                        StyledSwitch {
+                            checked: GlobalConfig.utilities.recording.recordSystem
+                            onToggled: {
+                                GlobalConfig.utilities.recording.recordSystem = checked;
+                                GlobalConfig.save();
+                            }
                         }
-                    }
 
-                    StyledText {
-                        text: Math.round(Audio.volume * 100) + "%"
-                        font.pointSize: Appearance.font.size.small
-                        color: Colours.palette.m3onSurfaceVariant
-                        Layout.preferredWidth: 40
-                    }
+                        StyledText {
+                            Layout.preferredWidth: 85
+                            text: qsTr("System")
+                            font: Tokens.font.body.small
+                            elide: Text.ElideRight
+                        }
 
-                    IconButton {
-                        icon: Audio.muted ? "volume_off" : "volume_up"
-                        type: Audio.muted ? IconButton.Filled : IconButton.Tonal
-                        font.pointSize: Appearance.font.size.small
-                        onClicked: {
-                            if (Audio.sink?.audio) {
-                                Audio.sink.audio.muted = !Audio.sink.audio.muted;
+                        StyledSlider {
+                            id: systemVolumeSlider
+                            Layout.fillWidth: true
+                            implicitHeight: 24
+                            opacity: GlobalConfig.utilities.recording.recordSystem ? 1.0 : 0.5
+                            from: 0
+                            to: 1
+                            value: Audio.volume
+                            onMoved: Audio.setVolume(value)
+                        }
+
+                        StyledText {
+                            text: Math.round(Audio.volume * 100) + "%"
+                            font: Tokens.font.body.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            Layout.preferredWidth: 40
+                        }
+
+                        IconButton {
+                            icon: Audio.muted ? "volume_off" : "volume_up"
+                            type: Audio.muted ? IconButton.Filled : IconButton.Tonal
+                            font: Tokens.font.icon.small
+                            onClicked: {
+                                if (Audio.sink?.audio)
+                                    Audio.sink.audio.muted = !Audio.sink.audio.muted;
                             }
                         }
                     }
-                }
 
-                // Microphone (Default Source)
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: Appearance.spacing.normal
-
-                    StyledSwitch {
-                        checked: Config.utilities.recording.recordMicrophone
-                        onToggled: {
-                            Config.utilities.recording.recordMicrophone = checked;
-                            Config.save();
-                        }
-                    }
-
-                    StyledText {
-                        Layout.preferredWidth: 85
-                        text: qsTr("Microphone")
-                        font.pointSize: Appearance.font.size.small
-                        elide: Text.ElideRight
-                    }
-
-                    StyledSlider {
-                        id: micVolumeSlider
+                    // Microphone (Default Source)
+                    RowLayout {
                         Layout.fillWidth: true
-                        implicitHeight: 24
-                        opacity: Config.utilities.recording.recordMicrophone ? 1.0 : 0.5
-                        from: 0
-                        to: 1
-                        value: Audio.sourceVolume
-                        onMoved: {
-                            Audio.setSourceVolume(value);
+                        spacing: Tokens.spacing.medium
+
+                        StyledSwitch {
+                            checked: GlobalConfig.utilities.recording.recordMicrophone
+                            onToggled: {
+                                GlobalConfig.utilities.recording.recordMicrophone = checked;
+                                GlobalConfig.save();
+                            }
                         }
-                    }
 
-                    StyledText {
-                        text: Math.round(Audio.sourceVolume * 100) + "%"
-                        font.pointSize: Appearance.font.size.small
-                        color: Colours.palette.m3onSurfaceVariant
-                        Layout.preferredWidth: 40
-                    }
+                        StyledText {
+                            Layout.preferredWidth: 85
+                            text: qsTr("Microphone")
+                            font: Tokens.font.body.small
+                            elide: Text.ElideRight
+                        }
 
-                    IconButton {
-                        icon: Audio.sourceMuted ? "mic_off" : "mic"
-                        type: Audio.sourceMuted ? IconButton.Filled : IconButton.Tonal
-                        font.pointSize: Appearance.font.size.small
-                        onClicked: {
-                            if (Audio.source?.audio) {
-                                Audio.source.audio.muted = !Audio.source.audio.muted;
+                        StyledSlider {
+                            id: micVolumeSlider
+                            Layout.fillWidth: true
+                            implicitHeight: 24
+                            opacity: GlobalConfig.utilities.recording.recordMicrophone ? 1.0 : 0.5
+                            from: 0
+                            to: 1
+                            value: Audio.sourceVolume
+                            onMoved: Audio.setSourceVolume(value)
+                        }
+
+                        StyledText {
+                            text: Math.round(Audio.sourceVolume * 100) + "%"
+                            font: Tokens.font.body.small
+                            color: Colours.palette.m3onSurfaceVariant
+                            Layout.preferredWidth: 40
+                        }
+
+                        IconButton {
+                            icon: Audio.sourceMuted ? "mic_off" : "mic"
+                            type: Audio.sourceMuted ? IconButton.Filled : IconButton.Tonal
+                            font: Tokens.font.icon.small
+                            onClicked: {
+                                if (Audio.source?.audio)
+                                    Audio.source.audio.muted = !Audio.source.audio.muted;
                             }
                         }
                     }
-                }
 
                     Behavior on y {
-                        Anim { duration: Appearance.anim.durations.small }
+                        Anim { duration: Tokens.anim.durations.small }
                     }
                 }
 
@@ -316,7 +341,7 @@ StyledRect {
                 }
 
                 Behavior on opacity {
-                    Anim { duration: Appearance.anim.durations.small }
+                    Anim { duration: Tokens.anim.durations.small }
                 }
             }
         }
@@ -354,9 +379,7 @@ StyledRect {
                     PropertyAction {}
                     ParallelAnimation {
                         SequentialAnimation {
-                            PauseAnimation {
-                                duration: 100
-                            }
+                            PauseAnimation { duration: 100 }
                             PropertyAction {
                                 target: locHeightAnim
                                 property: "enabled"
@@ -389,7 +412,7 @@ StyledRect {
             spacing: Tokens.spacing.medium
 
             StyledRect {
-                radius: Appearance.rounding.full
+                radius: Tokens.rounding.full
                 color: Recorder.starting ? Colours.palette.m3secondary : Recorder.paused ? Colours.palette.m3tertiary : Colours.palette.m3error
 
                 implicitWidth: recText.implicitWidth + Tokens.padding.medium * 2
@@ -401,26 +424,22 @@ StyledRect {
                     animate: true
                     text: Recorder.paused ? "PAUSED" : "REC"
                     color: Recorder.paused ? Colours.palette.m3onTertiary : Colours.palette.m3onError
-                    font.family: Tokens.font.family.mono
+                    font: Tokens.font.mono.small
                 }
 
-                Behavior on implicitWidth {
-                    Anim {}
-                }
+                Behavior on implicitWidth { Anim {} }
 
                 SequentialAnimation on opacity {
                     running: !Recorder.starting && !Recorder.paused && root.actuallyRecording
                     alwaysRunToEnd: true
                     loops: Animation.Infinite
                     Anim {
-                        from: 1
-                        to: 0
+                        from: 1; to: 0
                         duration: Tokens.anim.durations.large
                         easing: Tokens.anim.emphasizedAccel
                     }
                     Anim {
-                        from: 0
-                        to: 1
+                        from: 0; to: 1
                         duration: Tokens.anim.durations.extraLarge
                         easing: Tokens.anim.emphasizedDecel
                     }
@@ -432,7 +451,6 @@ StyledRect {
                 text: {
                     if (Recorder.starting)
                         return root.startingText(Recorder.videoMode || root.currentVideoMode);
-
                     const elapsed = Recorder.elapsed;
                     const hours = Math.floor(elapsed / 3600);
                     const mins = Math.floor((elapsed % 3600) / 60);
@@ -451,25 +469,25 @@ StyledRect {
             ButtonRow {
                 spacing: Tokens.spacing.extraSmall
 
-            IconButton {
-                label.animate: true
-                icon: Recorder.paused ? "play_arrow" : "pause"
-                toggle: true
-                checked: Recorder.paused
-                type: IconButton.Tonal
-                font.pointSize: Tokens.font.size.large
-                onClicked: {
-                    Recorder.togglePause();
-                    internalChecked = Recorder.paused;
+                IconButton {
+                    icon: Recorder.paused ? "play_arrow" : "pause"
+                    isToggle: true
+                    checked: Recorder.paused
+                    type: IconButton.Tonal
+                    font: Tokens.font.icon.large
+                    onClicked: {
+                        Recorder.togglePause();
+                        internalChecked = Recorder.paused;
+                    }
                 }
-            }
 
-            IconButton {
-                icon: "stop"
-                inactiveColour: Colours.palette.m3error
-                inactiveOnColour: Colours.palette.m3onError
-                font.pointSize: Tokens.font.size.large
-                onClicked: Recorder.stop()
+                IconButton {
+                    icon: "stop"
+                    inactiveColour: Colours.palette.m3error
+                    inactiveOnColour: Colours.palette.m3onError
+                    font: Tokens.font.icon.large
+                    onClicked: Recorder.stop()
+                }
             }
         }
     }
