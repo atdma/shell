@@ -14,6 +14,7 @@ import qs.modules.nexus.pages.panels
 import qs.modules.nexus.pages.services
 import qs.modules.nexus.pages.wallandstyle
 import qs.modules.nexus.pages.panels.taskbar
+import qs.modules.controlcenter.monitors
 
 QtObject {
     id: root
@@ -38,12 +39,27 @@ QtObject {
             }
         },
 
+        Component {
+            // Display / Monitors
+            StackPage {
+                Component {
+                    MonitorsPane {}
+                }
+                Component {
+                    MonitorDetail {}
+                }
+            }
+        },
+
         // Connectivity
         Component {
             // Network
             StackPage {
                 Component {
                     NetworkPage {}
+                }
+                Component {
+                    NetworkPassword {}
                 }
             }
         },

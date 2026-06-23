@@ -70,7 +70,7 @@ Variants {
                 StyledText {
                     Layout.alignment: Qt.AlignHCenter
                     text: win.monitor?.name ?? ""
-                    font.pointSize: Tokens.font.size.normal
+                    font: Tokens.font.body.medium
                     color: Colours.palette.m3onSurfaceVariant
                 }
 
