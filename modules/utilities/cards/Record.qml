@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Caelestia.Components
 import Caelestia.Config
 import qs.components
 import qs.components.controls
@@ -12,11 +13,12 @@ StyledRect {
 
     required property var props
     required property DrawerVisibilities visibilities
+    readonly property real nonAnimHeight: btnLayout.implicitHeight + listOrControls.implicitHeight + layout.spacing + layout.anchors.margins * 2
 
     Layout.fillWidth: true
     implicitHeight: layout.implicitHeight + layout.anchors.margins * 2
 
-    radius: Tokens.rounding.normal
+    radius: Tokens.rounding.large
     color: Colours.tPalette.m3surfaceContainer
 
     property bool actuallyRecording: Recorder.running
@@ -39,16 +41,17 @@ StyledRect {
 
         anchors.fill: parent
         anchors.margins: Tokens.padding.large
-        spacing: Tokens.spacing.normal
+        spacing: Tokens.spacing.medium
 
         RowLayout {
-            spacing: Tokens.spacing.normal
-            z: 1
+            id: btnLayout
+
+            spacing: Tokens.spacing.medium
 
             StyledRect {
                 implicitWidth: implicitHeight
                 implicitHeight: {
-                    const h = icon.implicitHeight + Tokens.padding.smaller * 2;
+                    const h = icon.implicitHeight + Tokens.padding.small * 2;
                     return h - (h % 2);
                 }
 
@@ -59,11 +62,10 @@ StyledRect {
                     id: icon
 
                     anchors.centerIn: parent
-                    anchors.horizontalCenterOffset: -0.5
-                    anchors.verticalCenterOffset: 1.5
+                    anchors.verticalCenterOffset: 1
                     text: "screen_record"
-                    color: root.recordingBusy ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
-                    font.pointSize: Appearance.font.size.large
+                    color: Recorder.running ? Colours.palette.m3onSecondary : Colours.palette.m3onSecondaryContainer
+                    fontStyle: Tokens.font.icon.large
                 }
             }
 
@@ -74,7 +76,7 @@ StyledRect {
                 StyledText {
                     Layout.fillWidth: true
                     text: qsTr("Screen Recorder")
-                    font.pointSize: Tokens.font.size.normal
+                    font: Tokens.font.body.medium
                     elide: Text.ElideRight
                 }
 
@@ -92,8 +94,9 @@ StyledRect {
                         return qsTr("Recording off");
                     }
                     color: root.lastError !== "" ? Colours.palette.m3error : Colours.palette.m3onSurfaceVariant
-                    font.pointSize: Appearance.font.size.small
+                    font.pointSize: Tokens.font.body.small
                     elide: Text.ElideRight
+                    animate: true
                 }
             }
 
@@ -327,6 +330,7 @@ StyledRect {
             Layout.fillWidth: true
             Layout.preferredHeight: implicitHeight
             sourceComponent: running ? recordingControls : recordingList
+            clip: Layout.preferredHeight < implicitHeight
 
             Behavior on Layout.preferredHeight {
                 id: locHeightAnim
@@ -336,21 +340,11 @@ StyledRect {
 
             Behavior on running {
                 SequentialAnimation {
-                    ParallelAnimation {
-                        Anim {
-                            target: listOrControls
-                            property: "scale"
-                            to: 0.7
-                            duration: Tokens.anim.durations.small
-                            easing: Tokens.anim.standardAccel
-                        }
-                        Anim {
-                            target: listOrControls
-                            property: "opacity"
-                            to: 0
-                            duration: Tokens.anim.durations.small
-                            easing: Tokens.anim.standardAccel
-                        }
+                    Anim {
+                        target: listOrControls
+                        property: "opacity"
+                        to: 0
+                        type: Anim.DefaultEffects
                     }
                     PropertyAction {
                         target: locHeightAnim
@@ -358,25 +352,22 @@ StyledRect {
                         value: true
                     }
                     PropertyAction {}
-                    PropertyAction {
-                        target: locHeightAnim
-                        property: "enabled"
-                        value: false
-                    }
                     ParallelAnimation {
-                        Anim {
-                            target: listOrControls
-                            property: "scale"
-                            to: 1
-                            duration: Tokens.anim.durations.small
-                            easing: Tokens.anim.standardDecel
+                        SequentialAnimation {
+                            PauseAnimation {
+                                duration: 100
+                            }
+                            PropertyAction {
+                                target: locHeightAnim
+                                property: "enabled"
+                                value: false
+                            }
                         }
                         Anim {
                             target: listOrControls
                             property: "opacity"
                             to: 1
-                            duration: Tokens.anim.durations.small
-                            easing: Tokens.anim.standardDecel
+                            type: Anim.SlowEffects
                         }
                     }
                 }
@@ -395,22 +386,22 @@ StyledRect {
     Component {
         id: recordingControls
         RowLayout {
-            spacing: Tokens.spacing.normal
+            spacing: Tokens.spacing.medium
 
             StyledRect {
                 radius: Appearance.rounding.full
                 color: Recorder.starting ? Colours.palette.m3secondary : Recorder.paused ? Colours.palette.m3tertiary : Colours.palette.m3error
 
-                implicitWidth: recText.implicitWidth + Tokens.padding.normal * 2
-                implicitHeight: recText.implicitHeight + Tokens.padding.smaller * 2
+                implicitWidth: recText.implicitWidth + Tokens.padding.medium * 2
+                implicitHeight: recText.implicitHeight + Tokens.padding.large
 
                 StyledText {
                     id: recText
                     anchors.centerIn: parent
                     animate: true
-                    text: Recorder.starting ? "WAIT" : Recorder.paused ? "PAUSED" : "REC"
-                    color: Recorder.starting ? Colours.palette.m3onSecondary : Recorder.paused ? Colours.palette.m3onTertiary : Colours.palette.m3onError
-                    font.family: Appearance.font.family.mono
+                    text: Recorder.paused ? "PAUSED" : "REC"
+                    color: Recorder.paused ? Colours.palette.m3onTertiary : Colours.palette.m3onError
+                    font.family: Tokens.font.family.mono
                 }
 
                 Behavior on implicitWidth {
@@ -437,6 +428,7 @@ StyledRect {
             }
 
             StyledText {
+                Layout.fillWidth: true
                 text: {
                     if (Recorder.starting)
                         return root.startingText(Recorder.videoMode || root.currentVideoMode);
@@ -452,15 +444,14 @@ StyledRect {
                         time = `${mins}:${secs}`;
                     return qsTr("Recording for %1").arg(time);
                 }
-                font.pointSize: Tokens.font.size.normal
+                font: Tokens.font.body.medium
+                elide: Text.ElideMiddle
             }
 
-            Item {
-                Layout.fillWidth: true
-            }
+            ButtonRow {
+                spacing: Tokens.spacing.extraSmall
 
             IconButton {
-                disabled: Recorder.starting
                 label.animate: true
                 icon: Recorder.paused ? "play_arrow" : "pause"
                 toggle: true
@@ -469,6 +460,7 @@ StyledRect {
                 font.pointSize: Tokens.font.size.large
                 onClicked: {
                     Recorder.togglePause();
+                    internalChecked = Recorder.paused;
                 }
             }
 
@@ -476,104 +468,9 @@ StyledRect {
                 icon: "stop"
                 inactiveColour: Colours.palette.m3error
                 inactiveOnColour: Colours.palette.m3onError
-                font.pointSize: Appearance.font.size.large
-                onClicked: stopRecording()
+                font.pointSize: Tokens.font.size.large
+                onClicked: Recorder.stop()
             }
         }
-    }
-
-    function videoModeLabel(mode) {
-        switch (mode) {
-        case "region": return qsTr("Region");
-        case "window": return qsTr("Window");
-        default: return qsTr("Fullscreen");
-        }
-    }
-
-    function audioModeLabel(mode) {
-        switch (mode) {
-        case "combined": return qsTr("system audio + microphone");
-        case "system": return qsTr("system audio");
-        case "mic": return qsTr("microphone");
-        default: return qsTr("no audio");
-        }
-    }
-
-    function startingText(mode) {
-        switch (mode) {
-        case "region": return qsTr("Select a recording region");
-        case "window": return qsTr("Select a window to record");
-        default: return qsTr("Starting fullscreen recording");
-        }
-    }
-
-    function startRecording(videoMode) {
-        // Clear any previous errors
-        root.lastError = "";
-
-        const selectedVideoMode = videoMode || Config.utilities.recording.videoMode || "fullscreen";
-        const audioMode = root.currentAudioMode;
-
-        Config.utilities.recording.videoMode = selectedVideoMode;
-        root.currentVideoMode = selectedVideoMode;
-
-        console.log("Starting recording - Video:", selectedVideoMode, "Audio:", audioMode);
-
-        // Call Recorder service
-        const success = Recorder.start(selectedVideoMode, audioMode);
-
-        if (!success) {
-            root.lastError = "Failed to start recording";
-        }
-    }
-
-    function stopRecording() {
-        root.lastError = "";
-        Recorder.stop();
-    }
-
-    // Clear error after timeout
-    Timer {
-        id: errorTimeout
-        interval: 10000
-        repeat: false
-        running: root.lastError !== ""
-        onTriggered: {
-            root.lastError = "";
-        }
-    }
-
-    Connections {
-        target: Recorder
-
-        function onRunningChanged() {
-            // Sync actuallyRecording with Recorder.running
-            root.actuallyRecording = Recorder.running;
-
-            if (!Recorder.running) {
-                console.log("Recording stopped");
-            }
-        }
-
-        function onErrorOccurred(errorMsg) {
-            console.error("Recorder error:", errorMsg);
-            root.lastError = errorMsg;
-            errorTimeout.restart();
-        }
-
-        function onRecordingStarted() {
-            console.log("Recording started successfully");
-            root.lastError = "";
-        }
-
-        function onRecordingStopped() {
-            console.log("Recording stopped successfully");
-        }
-    }
-
-    Component.onCompleted: {
-        // Sync initial state
-        root.actuallyRecording = Recorder.running;
-        root.currentVideoMode = Recorder.videoMode || Config.utilities.recording.videoMode || "fullscreen";
     }
 }

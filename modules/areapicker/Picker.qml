@@ -1,12 +1,12 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Caelestia
 import qs.components
+import qs.components.effects
 import qs.services
 
 MouseArea {
@@ -171,17 +171,17 @@ onClientsChanged: checkClientRects(mouseX, mouseY)
                 to: 0
                 type: Anim.StandardLarge
             }
-            ExAnim {
+            Anim {
                 target: root
                 properties: "rsx,rsy"
                 to: 0
             }
-            ExAnim {
+            Anim {
                 target: root
                 property: "sw"
                 to: root.screen.width
             }
-            ExAnim {
+            Anim {
                 target: root
                 property: "sh"
                 to: root.screen.height
@@ -240,12 +240,9 @@ onClientsChanged: checkClientRects(mouseX, mouseY)
         opacity: 0.3
 
         layer.enabled: true
-        layer.effect: MultiEffect {
+        layer.effect: Mask {
             maskSource: selectionWrapper
-            maskEnabled: true
             maskInverted: true
-            maskSpreadAtMin: 1
-            maskThresholdMin: 0.5
         }
     }
 
@@ -294,28 +291,24 @@ onClientsChanged: checkClientRects(mouseX, mouseY)
     Behavior on rsx {
         enabled: !root.pressed
 
-        ExAnim {}
+        Anim {}
     }
 
     Behavior on rsy {
         enabled: !root.pressed
 
-        ExAnim {}
+        Anim {}
     }
 
     Behavior on sw {
         enabled: !root.pressed
 
-        ExAnim {}
+        Anim {}
     }
 
     Behavior on sh {
         enabled: !root.pressed
 
-        ExAnim {}
-    }
-
-    component ExAnim: Anim {
-        type: Anim.DefaultSpatial
+        Anim {}
     }
 }
