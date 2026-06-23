@@ -12,9 +12,9 @@ import qs.modules.nexus.pages.audio
 import qs.modules.nexus.pages.bluetooth
 import qs.modules.nexus.pages.panels
 import qs.modules.nexus.pages.services
+import qs.modules.controlcenter.monitors
 import qs.modules.nexus.pages.wallandstyle
 import qs.modules.nexus.pages.panels.taskbar
-import qs.modules.controlcenter.monitors
 
 QtObject {
     id: root
@@ -38,7 +38,6 @@ QtObject {
                 }
             }
         },
-
         Component {
             // Display / Monitors
             StackPage {

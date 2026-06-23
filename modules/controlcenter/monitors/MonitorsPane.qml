@@ -84,9 +84,7 @@ PageBase {
                             text: "monitor"
                             fontStyle: Tokens.font.icon.medium
                             fill: listItem.modelData?.focused ? 1 : 0
-                            color: listItem.modelData?.focused
-                                ? Colours.palette.m3onPrimary
-                                : Colours.palette.m3onSecondaryContainer
+                            color: listItem.modelData?.focused ? Colours.palette.m3onPrimary : Colours.palette.m3onSecondaryContainer
                         }
                     }
 
@@ -111,7 +109,8 @@ PageBase {
                             color: Colours.palette.m3outline
                             text: {
                                 const m = listItem.modelData;
-                                if (!m || !m.width || !m.height) return qsTr("Unavailable");
+                                if (!m || !m.width || !m.height)
+                                    return qsTr("Unavailable");
                                 const rr = m.refreshRate ?? 0;
                                 return qsTr("%1×%2 @ %3 Hz").arg(m.width).arg(m.height).arg(rr.toFixed(0));
                             }

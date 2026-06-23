@@ -1,18 +1,14 @@
 pragma Singleton
 
+import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
-import QtQuick
 
 Singleton {
     id: root
 
     property list<var> monitors: []
-
-    function update(): void {
-        proc.running = true;
-    }
 
     readonly property Process proc: Process {
         command: ["hyprctl", "monitors", "-j"]
@@ -27,6 +23,12 @@ Singleton {
         }
     }
 
+    Component.onCompleted: update()
+
+    function update(): void {
+        proc.running = true;
+    }
+
     Timer {
         interval: 2000
         running: true
@@ -34,15 +36,14 @@ Singleton {
         onTriggered: root.update()
     }
 
-    Component.onCompleted: update()
-
     // Refresh when Hyprland reports changes
     Connections {
-        target: Hyprland
         function onRawEvent(event: HyprlandEvent): void {
             if (event.name.includes("mon")) {
                 root.update();
             }
         }
+
+        target: Hyprland
     }
 }

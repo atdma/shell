@@ -50,6 +50,7 @@ PageBase {
         // Status or Error text
         StyledText {
             id: errorText
+
             Layout.fillWidth: true
             visible: text !== ""
             text: ""
@@ -68,6 +69,7 @@ PageBase {
 
             StyledTextField {
                 id: passwordInput
+
                 anchors.centerIn: parent
                 width: parent.width - Tokens.padding.medium * 2
                 placeholderText: qsTr("Password")
@@ -97,6 +99,7 @@ PageBase {
 
             TextButton {
                 id: connectButton
+
                 property bool connecting: false
 
                 Layout.fillWidth: true
@@ -107,7 +110,8 @@ PageBase {
                 enabled: passwordInput.text.length > 0 && !connecting
 
                 onClicked: {
-                    if (!ap || connecting) return;
+                    if (!ap || connecting)
+                        return;
 
                     connecting = true;
                     errorText.text = "";

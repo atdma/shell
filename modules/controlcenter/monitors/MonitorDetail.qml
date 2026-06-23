@@ -100,14 +100,10 @@ PageBase {
 
                             readonly property bool isActive: Math.abs((root.mon?.refreshRate ?? 0) - modelData) < 0.1
 
-                            color: isActive
-                                ? Colours.palette.m3secondaryContainer
-                                : Qt.alpha(Colours.palette.m3surfaceVariant, 0.5)
+                            color: isActive ? Colours.palette.m3secondaryContainer : Qt.alpha(Colours.palette.m3surfaceVariant, 0.5)
 
                             StateLayer {
-                                color: parent.isActive
-                                    ? Colours.palette.m3onSecondaryContainer
-                                    : Colours.palette.m3onSurfaceVariant
+                                color: parent.isActive ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
                                 function onClicked(): void {
                                     if (root.mon)
                                         Monitors.setRefreshRate(root.mon.name, modelData);
@@ -119,12 +115,12 @@ PageBase {
                                 anchors.centerIn: parent
                                 text: qsTr("%1 Hz").arg(modelData)
                                 font: Tokens.font.body.small
-                                color: parent.isActive
-                                    ? Colours.palette.m3onSecondaryContainer
-                                    : Colours.palette.m3onSurfaceVariant
+                                color: parent.isActive ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
                             }
 
-                            Behavior on color { CAnim {} }
+                            Behavior on color {
+                                CAnim {}
+                            }
                         }
                     }
                 }
@@ -149,10 +145,26 @@ PageBase {
 
                     Repeater {
                         model: [
-                            { label: qsTr("0°"),   transform: 0, angle: 0   },
-                            { label: qsTr("90°"),  transform: 1, angle: 90  },
-                            { label: qsTr("180°"), transform: 2, angle: 180 },
-                            { label: qsTr("270°"), transform: 3, angle: 270 }
+                            {
+                                label: qsTr("0°"),
+                                transform: 0,
+                                angle: 0
+                            },
+                            {
+                                label: qsTr("90°"),
+                                transform: 1,
+                                angle: 90
+                            },
+                            {
+                                label: qsTr("180°"),
+                                transform: 2,
+                                angle: 180
+                            },
+                            {
+                                label: qsTr("270°"),
+                                transform: 3,
+                                angle: 270
+                            }
                         ]
 
                         delegate: RotationChip {
@@ -199,7 +211,9 @@ PageBase {
                         id: scaleSlider
                         Layout.fillWidth: true
                         implicitHeight: Tokens.padding.medium * 3
-                        from: 0.5; to: 3.0; stepSize: 0.25
+                        from: 0.5
+                        to: 3.0
+                        stepSize: 0.25
                         value: root.mon?.scale ?? 1
 
                         onMoved: scaleTimer.restart()
@@ -239,17 +253,12 @@ PageBase {
                             implicitHeight: scaleChipLabel.implicitHeight + Tokens.padding.medium * 2
                             radius: Tokens.rounding.full
 
-                            readonly property bool isActive:
-                                Math.abs((root.mon?.scale ?? 1) - modelData) < 0.01
+                            readonly property bool isActive: Math.abs((root.mon?.scale ?? 1) - modelData) < 0.01
 
-                            color: isActive
-                                ? Colours.palette.m3secondaryContainer
-                                : Qt.alpha(Colours.palette.m3surfaceVariant, 0.5)
+                            color: isActive ? Colours.palette.m3secondaryContainer : Qt.alpha(Colours.palette.m3surfaceVariant, 0.5)
 
                             StateLayer {
-                                color: parent.isActive
-                                    ? Colours.palette.m3onSecondaryContainer
-                                    : Colours.palette.m3onSurfaceVariant
+                                color: parent.isActive ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
                                 function onClicked(): void {
                                     if (root.mon)
                                         Monitors.setScale(root.mon.name, modelData);
@@ -261,12 +270,12 @@ PageBase {
                                 anchors.centerIn: parent
                                 text: qsTr("×%1").arg(modelData.toFixed(2))
                                 font: Tokens.font.body.small
-                                color: parent.isActive
-                                    ? Colours.palette.m3onSecondaryContainer
-                                    : Colours.palette.m3onSurfaceVariant
+                                color: parent.isActive ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
                             }
 
-                            Behavior on color { CAnim {} }
+                            Behavior on color {
+                                CAnim {}
+                            }
                         }
                     }
                 }
@@ -296,9 +305,7 @@ PageBase {
                     Layout.fillWidth: true
                     contentSpacing: Tokens.spacing.small
 
-                    visible: root.mon !== null
-                        && root.mon !== undefined
-                        && modelData.id !== root.mon.id
+                    visible: root.mon !== null && root.mon !== undefined && modelData.id !== root.mon.id
 
                     RowLayout {
                         Layout.fillWidth: true
@@ -312,9 +319,7 @@ PageBase {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: qsTr("Relative to Monitor %1 (%2)")
-                                .arg(modelData.id ?? 0)
-                                .arg(modelData.name ?? "")
+                            text: qsTr("Relative to Monitor %1 (%2)").arg(modelData.id ?? 0).arg(modelData.name ?? "")
                             font: Tokens.font.body.medium
                         }
                     }
@@ -327,10 +332,26 @@ PageBase {
 
                         Repeater {
                             model: [
-                                { label: qsTr("Left"),  pos: "left",   icon: "arrow_back"     },
-                                { label: qsTr("Right"), pos: "right",  icon: "arrow_forward"  },
-                                { label: qsTr("Above"), pos: "top",    icon: "arrow_upward"   },
-                                { label: qsTr("Below"), pos: "bottom", icon: "arrow_downward" }
+                                {
+                                    label: qsTr("Left"),
+                                    pos: "left",
+                                    icon: "arrow_back"
+                                },
+                                {
+                                    label: qsTr("Right"),
+                                    pos: "right",
+                                    icon: "arrow_forward"
+                                },
+                                {
+                                    label: qsTr("Above"),
+                                    pos: "top",
+                                    icon: "arrow_upward"
+                                },
+                                {
+                                    label: qsTr("Below"),
+                                    pos: "bottom",
+                                    icon: "arrow_downward"
+                                }
                             ]
 
                             delegate: ArrangeButton {
@@ -342,11 +363,7 @@ PageBase {
                                 btnLabel: modelData.label
                                 onClicked: {
                                     if (root.mon)
-                                        Monitors.arrange(
-                                            root.mon.name,
-                                            modelData.pos,
-                                            targetSection.modelData.id
-                                        );
+                                        Monitors.arrange(root.mon.name, modelData.pos, targetSection.modelData.id);
                                 }
                             }
                         }
@@ -379,47 +396,36 @@ PageBase {
                 PropertyRow {
                     showTopMargin: true
                     label: qsTr("Resolution")
-                    value: root.mon?.width && root.mon?.height
-                        ? qsTr("%1 × %2 px").arg(root.mon.width).arg(root.mon.height)
-                        : qsTr("N/A")
+                    value: root.mon?.width && root.mon?.height ? qsTr("%1 × %2 px").arg(root.mon.width).arg(root.mon.height) : qsTr("N/A")
                 }
                 PropertyRow {
                     showTopMargin: true
                     label: qsTr("Refresh rate")
-                    value: root.mon?.refreshRate != null
-                        ? qsTr("%1 Hz").arg((root.mon.refreshRate).toFixed(3))
-                        : qsTr("N/A")
+                    value: root.mon?.refreshRate != null ? qsTr("%1 Hz").arg((root.mon.refreshRate).toFixed(3)) : qsTr("N/A")
                 }
                 PropertyRow {
                     showTopMargin: true
                     label: qsTr("Position")
-                    value: root.mon != null
-                        ? qsTr("x: %1, y: %2").arg(root.mon.x ?? 0).arg(root.mon.y ?? 0)
-                        : qsTr("N/A")
+                    value: root.mon != null ? qsTr("x: %1, y: %2").arg(root.mon.x ?? 0).arg(root.mon.y ?? 0) : qsTr("N/A")
                 }
                 PropertyRow {
                     showTopMargin: true
                     label: qsTr("Scale")
-                    value: root.mon?.scale != null
-                        ? qsTr("×%1").arg((root.mon.scale).toFixed(2))
-                        : qsTr("N/A")
+                    value: root.mon?.scale != null ? qsTr("×%1").arg((root.mon.scale).toFixed(2)) : qsTr("N/A")
                 }
                 PropertyRow {
                     showTopMargin: true
                     label: qsTr("Transform")
                     value: {
                         const t = root.mon?.transform ?? 0;
-                        return ["Normal (0°)", "90°", "180°", "270°",
-                                "Flipped", "Flipped 90°", "Flipped 180°", "Flipped 270°"][t]
-                            ?? qsTr("Unknown");
+                        return ["Normal (0°)", "90°", "180°", "270°", "Flipped", "Flipped 90°", "Flipped 180°", "Flipped 270°"][t] ?? qsTr("Unknown");
                     }
                 }
                 PropertyRow {
                     showTopMargin: true
                     label: qsTr("Make / Model")
                     value: {
-                        const parts = [root.mon?.make, root.mon?.model]
-                            .filter(v => v && v.length > 0);
+                        const parts = [root.mon?.make, root.mon?.model].filter(v => v && v.length > 0);
                         return parts.length > 0 ? parts.join(" ") : qsTr("Unknown");
                     }
                 }
@@ -444,19 +450,17 @@ PageBase {
         required property string chipLabel
         required property int chipAngle
         required property bool isActive
-        signal clicked()
+        signal clicked
 
         implicitHeight: 72
         radius: Tokens.rounding.large
-        color: chip.isActive
-            ? Colours.palette.m3secondaryContainer
-            : Qt.alpha(Colours.palette.m3surfaceVariant, 0.5)
+        color: chip.isActive ? Colours.palette.m3secondaryContainer : Qt.alpha(Colours.palette.m3surfaceVariant, 0.5)
 
         StateLayer {
-            color: chip.isActive
-                ? Colours.palette.m3onSecondaryContainer
-                : Colours.palette.m3onSurfaceVariant
-            function onClicked(): void { chip.clicked(); }
+            color: chip.isActive ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+            function onClicked(): void {
+                chip.clicked();
+            }
         }
 
         ColumnLayout {
@@ -469,30 +473,30 @@ PageBase {
                 text: "screen_rotation"
                 rotation: chip.chipAngle
                 fontStyle: Tokens.font.icon.medium
-                color: chip.isActive
-                    ? Colours.palette.m3onSecondaryContainer
-                    : Colours.palette.m3onSurfaceVariant
-                Behavior on rotation { Anim {} }
+                color: chip.isActive ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+                Behavior on rotation {
+                    Anim {}
+                }
             }
 
             StyledText {
                 Layout.alignment: Qt.AlignHCenter
                 text: chip.chipLabel
                 font: Tokens.font.body.small
-                color: chip.isActive
-                    ? Colours.palette.m3onSecondaryContainer
-                    : Colours.palette.m3onSurfaceVariant
+                color: chip.isActive ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
             }
         }
 
-        Behavior on color { CAnim {} }
+        Behavior on color {
+            CAnim {}
+        }
     }
 
     component ArrangeButton: StyledRect {
         id: arrangeBtn
         required property string btnIcon
         required property string btnLabel
-        signal clicked()
+        signal clicked
 
         implicitHeight: 64
         radius: Tokens.rounding.medium
@@ -500,7 +504,9 @@ PageBase {
 
         StateLayer {
             color: Colours.palette.m3onSurfaceVariant
-            function onClicked(): void { arrangeBtn.clicked(); }
+            function onClicked(): void {
+                arrangeBtn.clicked();
+            }
         }
 
         ColumnLayout {

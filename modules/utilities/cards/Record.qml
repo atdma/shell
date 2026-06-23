@@ -30,9 +30,12 @@ StyledRect {
     readonly property string currentAudioMode: {
         const recordSystem = GlobalConfig.utilities.recording.recordSystem;
         const recordMic = GlobalConfig.utilities.recording.recordMicrophone;
-        if (recordSystem && recordMic) return "combined";
-        if (recordSystem) return "system";
-        if (recordMic) return "mic";
+        if (recordSystem && recordMic)
+            return "combined";
+        if (recordSystem)
+            return "system";
+        if (recordMic)
+            return "mic";
         return "none";
     }
 
@@ -48,23 +51,33 @@ StyledRect {
     }
 
     function videoModeLabel(mode) {
-        if (mode === "fullscreen") return qsTr("fullscreen");
-        if (mode === "region") return qsTr("region");
-        if (mode === "window") return qsTr("window");
+        if (mode === "fullscreen")
+            return qsTr("fullscreen");
+        if (mode === "region")
+            return qsTr("region");
+        if (mode === "window")
+            return qsTr("window");
         return mode;
     }
 
     function audioModeLabel(mode) {
-        if (mode === "combined") return qsTr("system + mic");
-        if (mode === "system") return qsTr("system audio");
-        if (mode === "mic") return qsTr("microphone");
+        if (mode === "combined")
+            return qsTr("system + mic");
+        if (mode === "system")
+            return qsTr("system audio");
+        if (mode === "mic")
+            return qsTr("microphone");
         return qsTr("no audio");
     }
 
     Connections {
         target: Recorder
-        function onErrorOccurred(errorMsg) { root.lastError = errorMsg; }
-        function onRecordingStarted() { root.lastError = ""; }
+        function onErrorOccurred(errorMsg) {
+            root.lastError = errorMsg;
+        }
+        function onRecordingStarted() {
+            root.lastError = "";
+        }
     }
 
     ColumnLayout {
@@ -114,9 +127,12 @@ StyledRect {
                 StyledText {
                     Layout.fillWidth: true
                     text: {
-                        if (root.lastError !== "") return qsTr("Error: %1").arg(root.lastError);
-                        if (Recorder.starting) return root.startingText(Recorder.videoMode || root.currentVideoMode);
-                        if (Recorder.paused) return qsTr("Recording paused");
+                        if (root.lastError !== "")
+                            return qsTr("Error: %1").arg(root.lastError);
+                        if (Recorder.starting)
+                            return root.startingText(Recorder.videoMode || root.currentVideoMode);
+                        if (Recorder.paused)
+                            return qsTr("Recording paused");
                         if (root.actuallyRecording) {
                             const videoText = root.videoModeLabel(Recorder.videoMode || root.currentVideoMode);
                             const audioText = root.audioModeLabel(Recorder.audioMode || root.currentAudioMode);
@@ -185,7 +201,9 @@ StyledRect {
             }
 
             Behavior on implicitHeight {
-                Anim { duration: Tokens.anim.durations.small }
+                Anim {
+                    duration: Tokens.anim.durations.small
+                }
             }
         }
 
@@ -204,7 +222,9 @@ StyledRect {
                     color: Colours.palette.m3onSurfaceVariant
                 }
 
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
 
                 IconButton {
                     icon: root.props.recordingAudioExpanded ? "unfold_less" : "unfold_more"
@@ -332,16 +352,22 @@ StyledRect {
                     }
 
                     Behavior on y {
-                        Anim { duration: Tokens.anim.durations.small }
+                        Anim {
+                            duration: Tokens.anim.durations.small
+                        }
                     }
                 }
 
                 Behavior on Layout.preferredHeight {
-                    Anim { type: Anim.DefaultSpatial }
+                    Anim {
+                        type: Anim.DefaultSpatial
+                    }
                 }
 
                 Behavior on opacity {
-                    Anim { duration: Tokens.anim.durations.small }
+                    Anim {
+                        duration: Tokens.anim.durations.small
+                    }
                 }
             }
         }
@@ -379,7 +405,9 @@ StyledRect {
                     PropertyAction {}
                     ParallelAnimation {
                         SequentialAnimation {
-                            PauseAnimation { duration: 100 }
+                            PauseAnimation {
+                                duration: 100
+                            }
                             PropertyAction {
                                 target: locHeightAnim
                                 property: "enabled"
@@ -427,19 +455,23 @@ StyledRect {
                     font: Tokens.font.mono.small
                 }
 
-                Behavior on implicitWidth { Anim {} }
+                Behavior on implicitWidth {
+                    Anim {}
+                }
 
                 SequentialAnimation on opacity {
                     running: !Recorder.starting && !Recorder.paused && root.actuallyRecording
                     alwaysRunToEnd: true
                     loops: Animation.Infinite
                     Anim {
-                        from: 1; to: 0
+                        from: 1
+                        to: 0
                         duration: Tokens.anim.durations.large
                         easing: Tokens.anim.emphasizedAccel
                     }
                     Anim {
-                        from: 0; to: 1
+                        from: 0
+                        to: 1
                         duration: Tokens.anim.durations.extraLarge
                         easing: Tokens.anim.emphasizedDecel
                     }

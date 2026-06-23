@@ -13,7 +13,6 @@ QtObject {
             description: qsTr("Wallpaper, fonts, colours"),
             category: "appearance"
         },
-
         {
             label: qsTr("Display"),
             icon: "monitor",
