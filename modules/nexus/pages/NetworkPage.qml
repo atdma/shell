@@ -91,9 +91,14 @@ PageBase {
 
                 onClicked: {
                     if (!modelData.active) {
-                        NetworkConnection.handleConnect(modelData);
-                        currentSelected = true;
-                        root.networkSelected(modelData);
+                        if (modelData.isSecure && !Nmcli.hasSavedProfile(modelData.ssid)) {
+                            root.nState.selectedNetwork = modelData;
+                            root.nState.openSubPage(1);
+                        } else {
+                            NetworkConnection.handleConnect(modelData);
+                            currentSelected = true;
+                            root.networkSelected(modelData);
+                        }
                     }
                 }
 
