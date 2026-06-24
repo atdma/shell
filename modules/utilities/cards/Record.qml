@@ -24,12 +24,12 @@ StyledRect {
     property bool actuallyRecording: Recorder.running
     readonly property bool recordingBusy: Recorder.running || Recorder.starting
     property string lastError: ""
-    property string currentVideoMode: Recorder.videoMode || GlobalConfig.utilities.recording.videoMode || "fullscreen"
+    property string currentVideoMode: Recorder.videoMode || (GlobalConfig.utilities?.recording?.videoMode ?? "fullscreen")
 
     // Computed audio mode based on settings
     readonly property string currentAudioMode: {
-        const recordSystem = GlobalConfig.utilities.recording.recordSystem;
-        const recordMic = GlobalConfig.utilities.recording.recordMicrophone;
+        const recordSystem = GlobalConfig.utilities?.recording?.recordSystem ?? true;
+        const recordMic = GlobalConfig.utilities?.recording?.recordMicrophone ?? false;
         if (recordSystem && recordMic)
             return "combined";
         if (recordSystem)
@@ -40,9 +40,11 @@ StyledRect {
     }
 
     function startRecording(mode) {
-        GlobalConfig.utilities.recording.videoMode = mode;
+        if (GlobalConfig.utilities?.recording) {
+            GlobalConfig.utilities.recording.videoMode = mode;
+            GlobalConfig.save();
+        }
         root.currentVideoMode = mode;
-        GlobalConfig.save();
         Recorder.start(mode, root.currentAudioMode);
     }
 
@@ -149,11 +151,13 @@ StyledRect {
 
             SplitButton {
                 disabled: root.recordingBusy
-                active: menuItems.find(m => m.mode === GlobalConfig.utilities.recording.videoMode) ?? menuItems[0]
+                active: menuItems.find(m => m.mode === (GlobalConfig.utilities?.recording?.videoMode ?? "fullscreen")) ?? menuItems[0]
                 menu.onItemSelected: item => {
-                    GlobalConfig.utilities.recording.videoMode = item.mode;
+                    if (GlobalConfig.utilities?.recording) {
+                        GlobalConfig.utilities.recording.videoMode = item.mode;
+                        GlobalConfig.save();
+                    }
                     root.currentVideoMode = item.mode;
-                    GlobalConfig.save();
                 }
 
                 menuItems: [
@@ -259,10 +263,12 @@ StyledRect {
                         spacing: Tokens.spacing.medium
 
                         StyledSwitch {
-                            checked: GlobalConfig.utilities.recording.recordSystem
+                            checked: GlobalConfig.utilities?.recording?.recordSystem ?? true
                             onToggled: {
-                                GlobalConfig.utilities.recording.recordSystem = checked;
-                                GlobalConfig.save();
+                                if (GlobalConfig.utilities?.recording) {
+                                    GlobalConfig.utilities.recording.recordSystem = checked;
+                                    GlobalConfig.save();
+                                }
                             }
                         }
 
@@ -277,7 +283,7 @@ StyledRect {
                             id: systemVolumeSlider
                             Layout.fillWidth: true
                             implicitHeight: 24
-                            opacity: GlobalConfig.utilities.recording.recordSystem ? 1.0 : 0.5
+                            opacity: (GlobalConfig.utilities?.recording?.recordSystem ?? true) ? 1.0 : 0.5
                             from: 0
                             to: 1
                             value: Audio.volume
@@ -308,10 +314,12 @@ StyledRect {
                         spacing: Tokens.spacing.medium
 
                         StyledSwitch {
-                            checked: GlobalConfig.utilities.recording.recordMicrophone
+                            checked: GlobalConfig.utilities?.recording?.recordMicrophone ?? false
                             onToggled: {
-                                GlobalConfig.utilities.recording.recordMicrophone = checked;
-                                GlobalConfig.save();
+                                if (GlobalConfig.utilities?.recording) {
+                                    GlobalConfig.utilities.recording.recordMicrophone = checked;
+                                    GlobalConfig.save();
+                                }
                             }
                         }
 
@@ -326,7 +334,7 @@ StyledRect {
                             id: micVolumeSlider
                             Layout.fillWidth: true
                             implicitHeight: 24
-                            opacity: GlobalConfig.utilities.recording.recordMicrophone ? 1.0 : 0.5
+                            opacity: (GlobalConfig.utilities?.recording?.recordMicrophone ?? false) ? 1.0 : 0.5
                             from: 0
                             to: 1
                             value: Audio.sourceVolume
