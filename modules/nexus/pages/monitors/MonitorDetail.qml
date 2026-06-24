@@ -182,25 +182,36 @@ PageBase {
         // ── Arrangement ──────────────────────────────────────
         ColumnLayout {
             Layout.fillWidth: true
-            visible: Hyprctl.monitors.length > 1
+            visible: otherMons.length > 0
             spacing: Tokens.spacing.extraSmall / 2
+
+            readonly property var otherMons: {
+                if (!root.mon || !Hyprctl.monitors) return [];
+                const res = [];
+                for (let i = 0; i < Hyprctl.monitors.length; i++) {
+                    if (Hyprctl.monitors[i].id !== root.mon.id)
+                        res.push(Hyprctl.monitors[i]);
+                }
+                return res;
+            }
 
             SectionHeader {
                 text: qsTr("Arrangement")
             }
 
             Repeater {
-                model: Hyprctl.monitors
+                model: parent.otherMons
 
                 delegate: ConnectedRect {
                     id: targetSection
+
                     required property var modelData
                     required property int index
+
                     Layout.fillWidth: true
                     first: index === 0
-                    last: index === Hyprctl.monitors.length - 1
+                    last: index === parent.otherMons.length - 1
                     implicitHeight: arrangeLayout.implicitHeight + arrangeLayout.anchors.margins * 2
-                    visible: root.mon !== null && root.mon !== undefined && modelData.id !== root.mon.id
 
                     ColumnLayout {
                         id: arrangeLayout

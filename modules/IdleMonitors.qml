@@ -1,10 +1,12 @@
 pragma ComponentBehavior: Bound
 
 import "lock"
+import QtQml
 import Quickshell
 import Quickshell.Wayland
 import Caelestia.Config
 import Caelestia.Internal
+import Caelestia.Services
 import qs.services
 
 Scope {
@@ -27,13 +29,14 @@ Scope {
             Quickshell.execDetached(action);
     }
 
-    LogindManager {
-        onAboutToSleep: {
+    Connections {
+        target: SessionManager
+        function onAboutToSleep() {
             if (GlobalConfig.general.idle.lockBeforeSleep)
                 root.lock.lock.locked = true;
         }
-        onLockRequested: root.lock.lock.locked = true
-        onUnlockRequested: root.lock.lock.unlock()
+        function onLockRequested() { root.lock.lock.locked = true; }
+        function onUnlockRequested() { root.lock.lock.unlock(); }
     }
 
     Variants {

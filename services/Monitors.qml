@@ -91,8 +91,15 @@ Singleton {
         else if (pos === "top")    y -= movingH;
         else if (pos === "bottom") y += targetH;
 
-        sendKeyword(monitorStr(moving, moving.scale || 1, moving.transform || 0, moving.refreshRate || 60)
-            .replace(`${moving.x}x${moving.y}`, `${Math.round(x)}x${Math.round(y)}`));
+        const scale = moving.scale || 1;
+        const transform = moving.transform || 0;
+        const rr = (moving.refreshRate || 60).toFixed(3);
+        
+        let s = `${moving.name},${moving.width}x${moving.height}@${rr},${Math.round(x)}x${Math.round(y)},${scale}`;
+        if (transform !== 0)
+            s += `,transform,${transform}`;
+            
+        sendKeyword(s);
     }
 
     function rotate(monitorName: string, angle: int): void {
