@@ -1,6 +1,5 @@
 pragma ComponentBehavior: Bound
 
-import ".."
 import "../components"
 import "."
 import qs.components
@@ -17,7 +16,7 @@ import QtQuick.Layouts
 Item {
     id: root
 
-    required property Session session
+    required property var session
     readonly property var monitorModel: Hyprctl.monitors
 
     function selectMonitor(monitor: var): void {
