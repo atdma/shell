@@ -21,16 +21,13 @@ PageBase {
         spacing: Tokens.spacing.extraSmall / 2
 
         ToggleRow {
+            Layout.fillWidth: true
             first: true
-            last: true
             text: qsTr("Identify displays")
-            subtext: qsTr("Show monitor IDs on each screen")
+            font: Tokens.font.body.medium
+            horizontalPadding: Tokens.padding.largeIncreased
             checked: Monitors.identifying
             onToggled: Monitors.toggleIdentification()
-        }
-
-        SectionHeader {
-            text: qsTr("Connected displays")
         }
 
         Repeater {
@@ -42,7 +39,7 @@ PageBase {
 
                 Layout.fillWidth: true
                 implicitHeight: itemLayout.implicitHeight + itemLayout.anchors.margins * 2
-                first: index === 0
+                first: false
                 last: index === Hyprctl.monitors.length - 1
 
                 StateLayer {
@@ -90,25 +87,9 @@ PageBase {
                         }
                     }
 
-                    StyledRect {
-                        visible: modelData.focused ?? false
-                        implicitWidth: focusedLabel.implicitWidth + Tokens.padding.normal * 2
-                        implicitHeight: focusedLabel.implicitHeight + Tokens.padding.small * 2
-                        radius: Tokens.rounding.full
-                        color: Qt.alpha(Colours.palette.m3primaryContainer, 0.9)
-
-                        StyledText {
-                            id: focusedLabel
-                            anchors.centerIn: parent
-                            text: qsTr("Active")
-                            font: Tokens.font.body.small
-                            color: Colours.palette.m3onPrimaryContainer
-                        }
-                    }
-
                     MaterialIcon {
-                        text: "chevron_right"
-                        color: Colours.palette.m3onSurfaceVariant
+                        text: (modelData.focused ?? false) ? "settings" : "chevron_right"
+                        color: (modelData.focused ?? false) ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                         fontStyle: Tokens.font.icon.medium
                     }
                 }

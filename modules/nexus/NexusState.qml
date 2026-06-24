@@ -11,6 +11,7 @@ QtObject {
 
     property string selectedWallpaperCategory
     property BluetoothDevice selectedBtDevice
+    property var selectedMonitor
 
     signal close
     signal subPageOpened(idx: int)
