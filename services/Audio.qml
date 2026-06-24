@@ -31,7 +31,7 @@ Singleton {
     readonly property alias beatTracker: beatTracker
 
     function setVolume(newVolume: real): void {
-        if (sink?.audio) {
+        if (sink?.ready && sink?.audio) {
             sink.audio.muted = false;
             sink.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
         }
@@ -46,7 +46,7 @@ Singleton {
     }
 
     function setSourceVolume(newVolume: real): void {
-        if (source?.audio) {
+        if (source?.ready && source?.audio) {
             source.audio.muted = false;
             source.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
         }
@@ -78,14 +78,14 @@ Singleton {
     }
 
     function setStreamVolume(stream: PwNode, newVolume: real): void {
-        if (stream?.audio) {
+        if (stream?.ready && stream?.audio) {
             stream.audio.muted = false;
             stream.audio.volume = Math.max(0, Math.min(GlobalConfig.services.maxVolume, newVolume));
         }
     }
 
     function setStreamMuted(stream: PwNode, muted: bool): void {
-        if (stream?.audio) {
+        if (stream?.ready && stream?.audio) {
             stream.audio.muted = muted;
         }
     }
@@ -106,7 +106,7 @@ Singleton {
     }
 
     onSinkChanged: {
-        if (!sink)
+        if (!sink?.ready)
             return;
 
         const newSinkName = sink.description || sink.name || qsTr("Unknown Device");
@@ -118,7 +118,7 @@ Singleton {
     }
 
     onSourceChanged: {
-        if (!source)
+        if (!source?.ready)
             return;
 
         const newSourceName = source.description || source.name || qsTr("Unknown Device");

@@ -36,7 +36,7 @@ ConnectedRect {
             id: icon
 
             color: Colours.palette.m3onSurfaceVariant
-            fontStyle: Tokens.font.icon.medium
+            font: Tokens.font.icon.medium
         }
 
         ColumnLayout {
@@ -66,7 +66,7 @@ ConnectedRect {
         MaterialIcon {
             text: "chevron_right"
             color: Colours.palette.m3onSurfaceVariant
-            fontStyle: Tokens.font.icon.medium
+            font: Tokens.font.icon.medium
         }
     }
 }

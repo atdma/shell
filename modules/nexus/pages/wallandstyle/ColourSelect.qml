@@ -26,7 +26,7 @@ PageBase {
                 Layout.alignment: Qt.AlignHCenter
                 text: "handyman"
                 color: Colours.palette.m3outlineVariant
-                fontStyle: Tokens.font.icon.extraLarge
+                font: Tokens.font.icon.extraLarge
             }
 
             StyledText {

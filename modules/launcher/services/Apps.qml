@@ -13,11 +13,14 @@ Searcher {
 
         if (entry.runInTerminal)
             Quickshell.execDetached({
-                command: [...GlobalConfig.general.apps.terminal, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, ...entry.command],
+                command: ["app2unit", "--", ...GlobalConfig.general.apps.terminal, `${Quickshell.shellDir}/assets/wrap_term_launch.sh`, ...entry.command],
                 workingDirectory: entry.workingDirectory
             });
         else
-            entry.execute();
+            Quickshell.execDetached({
+                command: ["app2unit", "--", ...entry.command],
+                workingDirectory: entry.workingDirectory
+            });
     }
 
     function search(search: string): list<var> {

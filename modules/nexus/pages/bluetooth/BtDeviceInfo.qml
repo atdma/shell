@@ -76,7 +76,7 @@ PageBase {
                         Layout.alignment: Qt.AlignHCenter
                         text: "delete"
                         color: forgetBtn.onColour
-                        fontStyle: Tokens.font.icon.medium
+                        font: Tokens.font.icon.medium
                     }
 
                     StyledText {
@@ -130,7 +130,7 @@ PageBase {
                             Layout.alignment: Qt.AlignHCenter
                             text: root.connected ? "close" : "add"
                             color: connectBtn.inactiveOnColour
-                            fontStyle: Tokens.font.icon.medium
+                            font: Tokens.font.icon.medium
                             animate: true
                         }
 
@@ -147,6 +147,7 @@ PageBase {
 
         // Connection group
         ToggleRow {
+            Layout.fillWidth: true
             verticalPadding: Tokens.padding.large
             first: true
             text: qsTr("Trusted")
@@ -159,6 +160,7 @@ PageBase {
         }
 
         ToggleRow {
+            Layout.fillWidth: true
             verticalPadding: Tokens.padding.large
             text: qsTr("Blocked")
             subtext: qsTr("Prevent this device from connecting")
@@ -170,6 +172,7 @@ PageBase {
         }
 
         ToggleRow {
+            Layout.fillWidth: true
             verticalPadding: Tokens.padding.large
             last: true
             text: qsTr("Wake allowed")

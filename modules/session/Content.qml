@@ -4,7 +4,6 @@ import QtQuick
 import Quickshell
 import Caelestia
 import Caelestia.Config
-import Caelestia.Services
 import qs.components
 import qs.components.controls
 import qs.services
@@ -85,11 +84,6 @@ Column {
 
         required property list<string> command
 
-        function exec(): void {
-            if (!SessionManager.exec(command))
-                Quickshell.execDetached(command);
-        }
-
         implicitWidth: Tokens.sizes.session.button
         implicitHeight: Tokens.sizes.session.button
 
@@ -97,10 +91,10 @@ Column {
         inactiveOnColour: activeFocus ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurface
         radius: pressed ? Tokens.rounding.medium : activeFocus ? Tokens.rounding.extraLarge : Tokens.rounding.largeIncreased
         font: Tokens.font.icon.builders.large.scale(1.3).build()
-        onClicked: exec()
+        onClicked: Quickshell.execDetached(button.command)
 
-        Keys.onEnterPressed: exec()
-        Keys.onReturnPressed: exec()
+        Keys.onEnterPressed: Quickshell.execDetached(button.command)
+        Keys.onReturnPressed: Quickshell.execDetached(button.command)
         Keys.onEscapePressed: root.visibilities.session = false
         Keys.onPressed: event => {
             if (!Config.session.vimKeybinds)

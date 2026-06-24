@@ -26,6 +26,7 @@ PageBase {
         spacing: Tokens.spacing.extraSmall / 2
 
         ToggleRow {
+            Layout.fillWidth: true
             first: true
             text: qsTr("Bluetooth")
             font: Tokens.font.body.medium
@@ -98,7 +99,7 @@ PageBase {
                             anchors.centerIn: parent
                             text: Icons.getBluetoothIcon(device.modelData?.icon ?? "")
                             color: device.connected ? Colours.palette.m3onPrimary : Colours.palette.m3onSecondaryContainer
-                            fontStyle: Tokens.font.icon.medium
+                            font: Tokens.font.icon.medium
                             fill: device.connected ? 1 : 0
                             opacity: device.textOpacity
 
@@ -194,7 +195,7 @@ PageBase {
 
                 MaterialIcon {
                     text: "add"
-                    fontStyle: Tokens.font.icon.medium
+                    font: Tokens.font.icon.medium
                 }
 
                 StyledText {
@@ -207,6 +208,7 @@ PageBase {
         }
 
         ToggleRow {
+            Layout.fillWidth: true
             Layout.topMargin: Tokens.spacing.large - parent.spacing
 
             first: true
@@ -226,6 +228,7 @@ PageBase {
         }
 
         ToggleRow {
+            Layout.fillWidth: true
             last: true
             text: qsTr("Pairable")
             subtext: qsTr("Allow nearby devices to pair with this one")

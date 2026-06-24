@@ -12,7 +12,7 @@ import "modules/lock"
 import Quickshell
 
 ShellRoot {
-    settings.watchFiles: true
+    settings.watchFiles: false
 
     GSFLoader {}
 
@@ -28,8 +28,5 @@ ShellRoot {
     BatteryMonitor {}
     IdleMonitors {
         lock: lock
-    }
-    MonitorIdentifier {
-        id: monitorIdentifier
     }
 }

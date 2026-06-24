@@ -38,14 +38,6 @@ Item {
     anchors.margins: borderThickness
     anchors.leftMargin: bar.implicitWidth
 
-    Behavior on anchors.margins {
-        Anim {}
-    }
-
-    Behavior on anchors.leftMargin {
-        Anim {}
-    }
-
     Item {
         id: osdWrapper
 

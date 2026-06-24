@@ -17,7 +17,7 @@ ColumnLayout {
 
         StyledText {
             text: qsTr("Monitors")
-            font.pointSize: Tokens.font.size.extraLarge
+            font: Tokens.font.title.large
             Layout.fillWidth: true
         }
 
@@ -72,13 +72,13 @@ ColumnLayout {
                                 spacing: 0
                                 StyledText {
                                     text: `${mon.name} - ${mon.make} ${mon.model}`
-                                    font.pointSize: Tokens.font.size.large
+                                    font: Tokens.font.title.medium
                                     Layout.fillWidth: true
                                 }
                                 StyledText {
                                     text: `${mon.width}x${mon.height}@${(mon.refreshRate ?? 0).toFixed(2)}Hz`
                                     color: Colours.palette.m3onSurfaceVariant
-                                    font.pointSize: Tokens.font.size.small
+                                    font: Tokens.font.body.small
                                 }
                             }
                             StyledText {
@@ -94,7 +94,7 @@ ColumnLayout {
 
                             MaterialIcon {
                                 text: "brightness_medium"
-                                font.pointSize: Tokens.font.size.normal
+                                fontStyle: Tokens.font.icon.medium
                             }
 
                             StyledSlider {
@@ -115,7 +115,7 @@ ColumnLayout {
 
                             MaterialIcon {
                                 text: "zoom_in"
-                                font.pointSize: Tokens.font.size.normal
+                                fontStyle: Tokens.font.icon.medium
                             }
 
                             StyledSlider {

@@ -41,7 +41,7 @@ ConnectedRect {
                 Layout.alignment: Qt.AlignHCenter
                 text: root.placeholderIcon
                 color: Colours.palette.m3outline
-                fontStyle: Tokens.font.icon.large
+                font: Tokens.font.icon.large
                 animate: true
             }
 

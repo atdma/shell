@@ -1,3 +1,6 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
 import Quickshell
 import qs.services
 
@@ -11,14 +14,13 @@ Variants {
 
         Exclusions {
             screen: scope.modelData
-            bar: drawerWindow.bar
+            bar: content.bar
         }
 
         ContentWindow {
-            id: drawerWindow
+            id: content
 
             screen: scope.modelData
-            name: "drawers"
         }
     }
 }

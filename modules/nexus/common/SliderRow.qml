@@ -18,7 +18,6 @@ ConnectedRect {
 
     signal moved(value: real)
 
-    Layout.fillWidth: true
     implicitHeight: rowLayout.implicitHeight + rowLayout.anchors.margins + rowLayout.anchors.topMargin
 
     RowLayout {
@@ -33,7 +32,7 @@ ConnectedRect {
             id: icon
 
             color: Colours.palette.m3onSurfaceVariant
-            fontStyle: Tokens.font.icon.medium
+            font: Tokens.font.icon.medium
         }
 
         ColumnLayout {

@@ -4,7 +4,6 @@ import ".."
 import QtQuick
 import Quickshell
 import Caelestia.Config
-import Caelestia.Services
 import qs.services
 import qs.utils
 
@@ -46,8 +45,7 @@ Searcher {
                 Colours.setMode(command[1]);
             } else {
                 list.visibilities.launcher = false;
-                if (!SessionManager.exec(command))
-                    Quickshell.execDetached(command);
+                Quickshell.execDetached(command);
             }
         }
     }

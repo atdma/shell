@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 import Caelestia.Config
 import qs.components
 import qs.components.controls
@@ -12,8 +11,6 @@ StyledSwitch {
     property alias first: bg.first
     property alias last: bg.last
     readonly property alias bg: bg
-
-    Layout.fillWidth: true
 
     horizontalPadding: Tokens.padding.largeIncreased
     verticalPadding: Tokens.padding.medium

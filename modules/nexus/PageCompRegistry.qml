@@ -7,12 +7,9 @@ import qs.components
 import qs.services
 import qs.modules.nexus.common
 import qs.modules.nexus.pages
-import qs.modules.nexus.pages.apps
 import qs.modules.nexus.pages.audio
 import qs.modules.nexus.pages.bluetooth
 import qs.modules.nexus.pages.panels
-import qs.modules.nexus.pages.services
-import qs.modules.controlcenter.monitors
 import qs.modules.nexus.pages.wallandstyle
 import qs.modules.nexus.pages.panels.taskbar
 
@@ -38,17 +35,6 @@ QtObject {
                 }
             }
         },
-        Component {
-            // Display / Monitors
-            StackPage {
-                Component {
-                    MonitorsPane {}
-                }
-                Component {
-                    MonitorDetail {}
-                }
-            }
-        },
 
         // Connectivity
         Component {
@@ -56,9 +42,6 @@ QtObject {
             StackPage {
                 Component {
                     NetworkPage {}
-                }
-                Component {
-                    NetworkPassword {}
                 }
             }
         },
@@ -135,27 +118,10 @@ QtObject {
             }
         },
         Component {
-            // Apps
-            StackPage {
-                Component {
-                    AppsPage {}
-                }
-                Component {
-                    AllApps {}
-                }
-                Component {
-                    AppInfo {}
-                }
-            }
-        },
-        Component {
             // Services
             StackPage {
                 Component {
                     ServicesPage {}
-                }
-                Component {
-                    NotificationsPage {}
                 }
             }
         },
@@ -193,7 +159,7 @@ QtObject {
                 Layout.alignment: Qt.AlignHCenter
                 text: "handyman"
                 color: Colours.palette.m3outlineVariant
-                fontStyle: Tokens.font.icon.extraLarge
+                font: Tokens.font.icon.extraLarge
             }
 
             StyledText {

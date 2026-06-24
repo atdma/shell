@@ -19,7 +19,6 @@ Item {
 
     readonly property PersistentProperties props: PersistentProperties {
         property bool recordingListExpanded: false
-        property bool recordingAudioExpanded: false
         property string recordingConfirmDelete
         property string recordingMode
 

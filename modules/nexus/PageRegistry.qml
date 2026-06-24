@@ -13,12 +13,15 @@ QtObject {
             description: qsTr("Wallpaper, fonts, colours"),
             category: "appearance"
         },
-        {
-            label: qsTr("Display"),
-            icon: "monitor",
-            description: qsTr("Monitor configuration"),
-            category: "connectivity"
-        },
+
+        // Connectivity
+        // TODO
+        // {
+        //     label: qsTr("Display"),
+        //     icon: "monitor",
+        //     description: qsTr("Output configuration"),
+        //     category: "connectivity"
+        // },
         {
             label: qsTr("Network"),
             icon: "wifi",
@@ -58,12 +61,6 @@ QtObject {
             label: qsTr("Panels"),
             icon: "dock_to_bottom",
             description: qsTr("Dashboard, taskbar, launcher, sidebar"),
-            category: "shell"
-        },
-        {
-            label: qsTr("Apps"),
-            icon: "apps",
-            description: qsTr("Default apps, favourites, hidden apps"),
             category: "shell"
         },
         {
