@@ -1,26 +1,26 @@
-import "../services"
-import qs.components
-import qs.services
-import qs.config
+import QtQuick
 import Quickshell
 import Quickshell.Widgets
-import QtQuick
+import Caelestia.Config
+import qs.components
+import qs.services
+import qs.utils
+import qs.modules.launcher.services
 
 Item {
     id: root
 
     required property DesktopEntry modelData
-    required property PersistentProperties visibilities
+    required property DrawerVisibilities visibilities
 
-    implicitHeight: Config.launcher.sizes.itemHeight
+    implicitHeight: Tokens.sizes.launcher.itemHeight
 
     anchors.left: parent?.left
     anchors.right: parent?.right
 
     StateLayer {
-        radius: Appearance.rounding.normal
-
-        function onClicked(): void {
+        radius: Tokens.rounding.large
+        onClicked: {
             Apps.launch(root.modelData);
             root.visibilities.launcher = false;
         }
@@ -28,13 +28,14 @@ Item {
 
     Item {
         anchors.fill: parent
-        anchors.leftMargin: Appearance.padding.larger
-        anchors.rightMargin: Appearance.padding.larger
-        anchors.margins: Appearance.padding.smaller
+        anchors.leftMargin: Tokens.padding.medium
+        anchors.rightMargin: Tokens.padding.medium
+        anchors.margins: Tokens.padding.small
 
         IconImage {
             id: icon
 
+            asynchronous: true
             source: Quickshell.iconPath(root.modelData?.icon, "image-missing")
             implicitSize: parent.height * 0.8
 
@@ -43,30 +44,45 @@ Item {
 
         Item {
             anchors.left: icon.right
-            anchors.leftMargin: Appearance.spacing.normal
+            anchors.leftMargin: Tokens.spacing.medium
             anchors.verticalCenter: icon.verticalCenter
 
-            implicitWidth: parent.width - icon.width
+            implicitWidth: parent.width - icon.width - favouriteIcon.width
             implicitHeight: name.implicitHeight + comment.implicitHeight
 
             StyledText {
                 id: name
 
                 text: root.modelData?.name ?? ""
-                font.pointSize: Appearance.font.size.normal
+                font: Tokens.font.body.medium
             }
 
             StyledText {
                 id: comment
 
                 text: (root.modelData?.comment || root.modelData?.genericName || root.modelData?.name) ?? ""
-                font.pointSize: Appearance.font.size.small
+                font: Tokens.font.body.small
                 color: Colours.palette.m3outline
 
                 elide: Text.ElideRight
-                width: root.width - icon.width - Appearance.rounding.normal * 2
+                width: root.width - icon.width - favouriteIcon.width - Tokens.rounding.extraLargeIncreased
 
                 anchors.top: name.bottom
+            }
+        }
+
+        Loader {
+            id: favouriteIcon
+
+            asynchronous: true
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.right
+            active: root.modelData && Strings.testRegexList(GlobalConfig.launcher.favouriteApps, root.modelData.id)
+
+            sourceComponent: MaterialIcon {
+                text: "favorite"
+                fill: 1
+                color: Colours.palette.m3primary
             }
         }
     }

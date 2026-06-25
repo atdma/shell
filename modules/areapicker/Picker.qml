@@ -1,13 +1,13 @@
 pragma ComponentBehavior: Bound
 
-import qs.components
-import qs.services
-import qs.config
-import Caelestia
-import Quickshell
-import Quickshell.Wayland
 import QtQuick
-import QtQuick.Effects
+import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
+import Caelestia
+import qs.components
+import qs.components.effects
+import qs.services
 
 MouseArea {
     id: root
@@ -80,8 +80,8 @@ MouseArea {
             } else {
                 Quickshell.execDetached(["swappy", "-f", path]);
             }
+            closeAnim.start();
         });
-        closeAnim.start();
     }
 
     onClientsChanged: checkClientRects(mouseX, mouseY)
@@ -166,19 +166,19 @@ MouseArea {
                 target: root
                 property: "opacity"
                 to: 0
-                duration: Appearance.anim.durations.large
+                type: Anim.StandardLarge
             }
-            ExAnim {
+            Anim {
                 target: root
                 properties: "rsx,rsy"
                 to: 0
             }
-            ExAnim {
+            Anim {
                 target: root
                 property: "sw"
                 to: root.screen.width
             }
-            ExAnim {
+            Anim {
                 target: root
                 property: "sh"
                 to: root.screen.height
@@ -191,9 +191,21 @@ MouseArea {
         }
     }
 
+    Process {
+        running: true
+        command: ["hyprctl", "cursorpos", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const pos = JSON.parse(text);
+                root.checkClientRects(pos.x - root.screen.x, pos.y - root.screen.y);
+            }
+        }
+    }
+
     Loader {
         id: screencopy
 
+        asynchronous: true
         anchors.fill: parent
 
         active: root.loader.freeze
@@ -218,12 +230,9 @@ MouseArea {
         opacity: 0.3
 
         layer.enabled: true
-        layer.effect: MultiEffect {
+        layer.effect: Mask {
             maskSource: selectionWrapper
-            maskEnabled: true
             maskInverted: true
-            maskSpreadAtMin: 1
-            maskThresholdMin: 0.5
         }
     }
 
@@ -265,36 +274,31 @@ MouseArea {
 
     Behavior on opacity {
         Anim {
-            duration: Appearance.anim.durations.large
+            type: Anim.StandardLarge
         }
     }
 
     Behavior on rsx {
         enabled: !root.pressed
 
-        ExAnim {}
+        Anim {}
     }
 
     Behavior on rsy {
         enabled: !root.pressed
 
-        ExAnim {}
+        Anim {}
     }
 
     Behavior on sw {
         enabled: !root.pressed
 
-        ExAnim {}
+        Anim {}
     }
 
     Behavior on sh {
         enabled: !root.pressed
 
-        ExAnim {}
-    }
-
-    component ExAnim: Anim {
-        duration: Appearance.anim.durations.expressiveDefaultSpatial
-        easing.bezierCurve: Appearance.anim.curves.expressiveDefaultSpatial
+        Anim {}
     }
 }
