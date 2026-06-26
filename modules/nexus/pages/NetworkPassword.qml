@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import Quickshell
 import Caelestia.Config
 import qs.components
 import qs.components.controls
@@ -20,8 +19,8 @@ PageBase {
     isSubPage: true
 
     onApChanged: {
-        if (!ap) {
-            nState.closeSubPage();
+        if (!root.ap) {
+            root.nState.closeSubPage();
         }
     }
 
@@ -36,12 +35,12 @@ PageBase {
             spacing: Tokens.spacing.extraSmall
 
             StyledText {
-                text: qsTr("Enter password for \"%1\"").arg(ap?.ssid ?? "")
+                text: qsTr("Enter password for \"%1\"").arg(root.ap?.ssid ?? "")
                 font: Tokens.font.body.medium
             }
 
             StyledText {
-                text: qsTr("Security: %1").arg(ap?.security ?? "")
+                text: qsTr("Security: %1").arg(root.ap?.security ?? "")
                 color: Colours.palette.m3outline
                 font: Tokens.font.body.small
             }
@@ -94,7 +93,7 @@ PageBase {
                 inactiveColour: Colours.palette.m3secondaryContainer
                 inactiveOnColour: Colours.palette.m3onSecondaryContainer
                 text: qsTr("Cancel")
-                onClicked: nState.closeSubPage()
+                onClicked: root.nState.closeSubPage()
             }
 
             TextButton {
@@ -110,16 +109,16 @@ PageBase {
                 enabled: passwordInput.text.length > 0 && !connecting
 
                 onClicked: {
-                    if (!ap || connecting)
+                    if (!root.ap || connecting)
                         return;
 
                     connecting = true;
                     errorText.text = "";
 
-                    NetworkConnection.connectWithPassword(ap, passwordInput.text, result => {
+                    NetworkConnection.connectWithPassword(root.ap, passwordInput.text, result => {
                         connecting = false;
                         if (result && result.success) {
-                            nState.closeSubPage();
+                            root.nState.closeSubPage();
                         } else {
                             errorText.text = qsTr("Failed to connect. Please check the password.");
                             passwordInput.text = "";

@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import Quickshell
 import Quickshell.Io
 import Caelestia.Config
 import qs.components
@@ -19,7 +18,7 @@ Item {
     readonly property var chars: splashText.split("")
 
     implicitWidth: wavyRow.implicitWidth
-    implicitHeight: wavyRow.implicitHeight + 16 * clockScale
+    implicitHeight: wavyRow.implicitHeight + 16 * root.clockScale
 
     Process {
         id: splashProc
@@ -38,15 +37,21 @@ Item {
     Row {
         id: wavyRow
         anchors.centerIn: parent
-        spacing: 1 * clockScale
+        spacing: 1 * root.clockScale
 
         property real animOffset: 0
-        NumberAnimation on animOffset {
+
+        NumberAnimation {
+            id: waveAnim
+            target: wavyRow
+            property: "animOffset"
             from: 0
             to: 2 * Math.PI
             duration: 3000
             loops: Animation.Infinite
         }
+
+        Component.onCompleted: waveAnim.start()
 
         Repeater {
             model: root.chars
@@ -56,11 +61,11 @@ Item {
                 required property int index
 
                 text: modelData
-                font: Tokens.font.body.builders.medium.weight(Font.Medium).size(Tokens.font.body.medium.pointSize * 1.15 * clockScale).build()
+                font: Tokens.font.body.builders.medium.weight(Font.Medium).size(Tokens.font.body.medium.pointSize * 1.15 * root.clockScale).build()
                 color: root.useLightSet ? Colours.palette.m3primary : Colours.palette.m3onSurface
                 opacity: 0.75
 
-                y: Math.sin(wavyRow.animOffset - index * 0.25) * (4 * clockScale)
+                y: Math.sin(wavyRow.animOffset - index * 0.25) * (4 * root.clockScale)
             }
         }
     }

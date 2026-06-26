@@ -133,7 +133,7 @@ Singleton {
         running: false
         command: ["pidof", "gpu-screen-recorder"]
 
-        onExited: code => {
+        onExited: (code, exitStatus) => {
             const wasRunning = props.running;
             const isRunning = code === 0;
 
@@ -144,7 +144,7 @@ Singleton {
                 props.running = false;
                 props.paused = false;
                 props.elapsed = 0;
-                recordingStopped();
+                root.recordingStopped();
             }
 
             // Schedule next check if still recording
@@ -183,7 +183,7 @@ Singleton {
         running: false
         command: ["pidof", "gpu-screen-recorder"]
 
-        onExited: code => {
+        onExited: (code, exitStatus) => {
             const isRunning = code === 0;
 
             if (isRunning && props.starting) {
@@ -191,7 +191,7 @@ Singleton {
                 props.starting = false;
                 props.running = true;
                 props.paused = false;
-                recordingStarted();
+                root.recordingStarted();
                 statusCheckTimer.restart();
                 return;
             }
@@ -204,7 +204,7 @@ Singleton {
                 }
 
                 console.error("Recording process failed to start");
-                errorOccurred("Recording did not start");
+                root.errorOccurred("Recording did not start");
                 props.starting = false;
                 props.running = false;
                 props.paused = false;
@@ -223,7 +223,7 @@ Singleton {
         running: false
         command: ["pidof", "gpu-screen-recorder"]
 
-        onExited: code => {
+        onExited: (code, exitStatus) => {
             const isRunning = code === 0;
 
             if (!isRunning) {
@@ -232,7 +232,7 @@ Singleton {
                 props.running = false;
                 props.paused = false;
                 props.elapsed = 0;
-                recordingStopped();
+                root.recordingStopped();
             } else {
                 // Process still running, try again
                 console.warn("Process still running, checking again");
@@ -280,7 +280,7 @@ Singleton {
         running: false
         command: ["pidof", "gpu-screen-recorder"]
 
-        onExited: code => {
+        onExited: (code, exitStatus) => {
             if (code === 0) {
                 console.log("Found existing recording process");
                 props.starting = false;

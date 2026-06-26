@@ -2,7 +2,6 @@ import qs.components
 import qs.components.controls
 import qs.services
 import Caelestia.Config
-import Quickshell
 import QtQuick
 import QtQuick.Layouts
 
@@ -13,7 +12,7 @@ ColumnLayout {
 
     RowLayout {
         Layout.fillWidth: true
-        Layout.margins: Tokens.padding.normal
+        Layout.margins: Tokens.padding.medium
 
         StyledText {
             text: qsTr("Monitors")
@@ -24,7 +23,7 @@ ColumnLayout {
         IconTextButton {
             icon: "info"
             text: qsTr("Identify")
-            toggle: true
+            isToggle: true
             checked: Monitors.identifying
             onClicked: Monitors.toggleIdentification()
         }
@@ -40,7 +39,7 @@ ColumnLayout {
             id: monitorsLayout
             anchors.left: parent.left
             anchors.right: parent.right
-            spacing: Tokens.spacing.normal
+            spacing: Tokens.spacing.medium
 
             Repeater {
                 model: Hyprctl.monitors
@@ -71,18 +70,18 @@ ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 0
                                 StyledText {
-                                    text: `${mon.name} - ${mon.make} ${mon.model}`
+                                    text: `${monitorDelegate.mon.name} - ${monitorDelegate.mon.make} ${monitorDelegate.mon.model}`
                                     font: Tokens.font.title.medium
                                     Layout.fillWidth: true
                                 }
                                 StyledText {
-                                    text: `${mon.width}x${mon.height}@${(mon.refreshRate ?? 0).toFixed(2)}Hz`
+                                    text: `${monitorDelegate.mon.width}x${monitorDelegate.mon.height}@${(monitorDelegate.mon.refreshRate ?? 0).toFixed(2)}Hz`
                                     color: Colours.palette.m3onSurfaceVariant
                                     font: Tokens.font.body.small
                                 }
                             }
                             StyledText {
-                                text: `ID: ${mon.id}`
+                                text: `ID: ${monitorDelegate.mon.id}`
                                 color: Colours.palette.m3onSurfaceVariant
                             }
                         }
@@ -90,7 +89,7 @@ ColumnLayout {
                         // Brightness
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: !!brightnessMon
+                            visible: !!monitorDelegate.brightnessMon
 
                             MaterialIcon {
                                 text: "brightness_medium"
@@ -99,12 +98,12 @@ ColumnLayout {
 
                             StyledSlider {
                                 Layout.fillWidth: true
-                                value: brightnessMon?.brightness ?? 0
-                                onMoved: if (brightnessMon) brightnessMon.setBrightness(value)
+                                value: monitorDelegate.brightnessMon?.brightness ?? 0
+                                onMoved: if (monitorDelegate.brightnessMon) monitorDelegate.brightnessMon.setBrightness(value)
                             }
 
                             StyledText {
-                                text: `${Math.round((brightnessMon?.brightness ?? 0) * 100)}%`
+                                text: `${Math.round((monitorDelegate.brightnessMon?.brightness ?? 0) * 100)}%`
                                 Layout.preferredWidth: 40
                             }
                         }
@@ -122,12 +121,12 @@ ColumnLayout {
                                 Layout.fillWidth: true
                                 from: 0.5
                                 to: 3.0
-                                value: mon.scale
-                                onMoved: Monitors.setScale(mon.name, value)
+                                value: monitorDelegate.mon.scale
+                                onMoved: Monitors.setScale(monitorDelegate.mon.name, value)
                             }
 
                             StyledText {
-                                text: `${mon.scale.toFixed(2)}x`
+                                text: `${monitorDelegate.mon.scale.toFixed(2)}x`
                                 Layout.preferredWidth: 40
                             }
                         }
@@ -147,8 +146,8 @@ ColumnLayout {
                                 min: 10
                                 max: 1000
                                 step: 1
-                                value: mon.refreshRate
-                                onValueModified: val => Monitors.setRefreshRate(mon.name, val)
+                                value: monitorDelegate.mon.refreshRate
+                                onValueModified: val => Monitors.setRefreshRate(monitorDelegate.mon.name, val)
                             }
                         }
 
@@ -171,10 +170,12 @@ ColumnLayout {
                                 ]
 
                                 delegate: IconButton {
+                                    required property var modelData
+                                    required property int index
                                     icon: modelData.icon
-                                    toggle: true
-                                    checked: mon.transform === modelData.val
-                                    onClicked: Monitors.rotate(mon.name, modelData.val * 90)
+                                    isToggle: true
+                                    checked: monitorDelegate.mon.transform === modelData.val
+                                    onClicked: Monitors.rotate(monitorDelegate.mon.name, modelData.val * 90)
                                 }
                             }
                         }
@@ -192,25 +193,25 @@ ColumnLayout {
                             CustomSpinBox {
                                 id: targetMonSelector
                                 min: 0
-                                max: Math.max(0, (Hyprctl.monitors?.length ?? 1) - 1)
+                                max: Math.max(0, (Hyprctl.monitors.length ?? 1) - 1)
                                 value: 0
                             }
 
                             IconButton {
                                 icon: "arrow_back"
-                                onClicked: Monitors.arrange(mon.name, "left", targetMonSelector.value)
+                                onClicked: Monitors.arrange(monitorDelegate.mon.name, "left", targetMonSelector.value)
                             }
                             IconButton {
                                 icon: "arrow_forward"
-                                onClicked: Monitors.arrange(mon.name, "right", targetMonSelector.value)
+                                onClicked: Monitors.arrange(monitorDelegate.mon.name, "right", targetMonSelector.value)
                             }
                             IconButton {
                                 icon: "arrow_upward"
-                                onClicked: Monitors.arrange(mon.name, "top", targetMonSelector.value)
+                                onClicked: Monitors.arrange(monitorDelegate.mon.name, "top", targetMonSelector.value)
                             }
                             IconButton {
                                 icon: "arrow_downward"
-                                onClicked: Monitors.arrange(mon.name, "bottom", targetMonSelector.value)
+                                onClicked: Monitors.arrange(monitorDelegate.mon.name, "bottom", targetMonSelector.value)
                             }
                         }
                     }

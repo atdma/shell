@@ -2,12 +2,9 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
-import Quickshell.Hyprland
 import Caelestia.Config
 import qs.components
 import qs.components.controls
-import qs.components.containers
 import qs.services
 import qs.modules.nexus.common
 
@@ -231,7 +228,7 @@ PageBase {
                             }
                             StyledText {
                                 Layout.fillWidth: true
-                                text: qsTr("Relative to Monitor %1 (%2)").arg(modelData.id ?? 0).arg(modelData.name ?? "")
+                                text: qsTr("Relative to Monitor %1 (%2)").arg(targetSection.modelData.id ?? 0).arg(targetSection.modelData.name ?? "")
                                 font: Tokens.font.body.medium
                             }
                         }

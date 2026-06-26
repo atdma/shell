@@ -162,21 +162,21 @@ StyledRect {
 
                 menuItems: [
                     MenuItem {
-                        property string mode: "fullscreen"
+                        mode: "fullscreen"
                         icon: "fullscreen"
                         text: qsTr("Record fullscreen")
                         activeText: qsTr("Fullscreen")
                         onClicked: root.startRecording(mode)
                     },
                     MenuItem {
-                        property string mode: "region"
+                        mode: "region"
                         icon: "screenshot_region"
                         text: qsTr("Record region")
                         activeText: qsTr("Region")
                         onClicked: root.startRecording(mode)
                     },
                     MenuItem {
-                        property string mode: "window"
+                        mode: "window"
                         icon: "web_asset"
                         text: qsTr("Record window")
                         activeText: qsTr("Window")

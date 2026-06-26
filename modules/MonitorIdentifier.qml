@@ -6,7 +6,6 @@ import qs.services
 import Caelestia.Config
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 

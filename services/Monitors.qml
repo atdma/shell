@@ -30,7 +30,7 @@ Singleton {
     }
 
     function sourceMonitors(): var {
-        if ((Hyprctl.monitors?.length ?? 0) > 0)
+        if ((Hyprctl.monitors.length ?? 0) > 0)
             return Hyprctl.monitors;
         return Hypr.monitors.values ?? [];
     }

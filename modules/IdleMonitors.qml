@@ -5,7 +5,6 @@ import QtQml
 import Quickshell
 import Quickshell.Wayland
 import Caelestia.Config
-import Caelestia.Internal
 import Caelestia.Services
 import qs.services
 
