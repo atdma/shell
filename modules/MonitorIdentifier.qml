@@ -12,9 +12,9 @@ import qs.services
 Variants {
     id: root
 
-    model: Quickshell.screens
-
     readonly property bool active: Monitors.identifying
+
+    model: Quickshell.screens
 
     StyledWindow {
         id: win

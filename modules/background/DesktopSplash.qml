@@ -20,6 +20,8 @@ Item {
     implicitWidth: wavyRow.implicitWidth
     implicitHeight: wavyRow.implicitHeight + 16 * root.clockScale
 
+    Component.onCompleted: splashProc.running = true
+
     Process {
         id: splashProc
 
@@ -33,15 +35,15 @@ Item {
         }
     }
 
-    Component.onCompleted: splashProc.running = true
-
     Row {
         id: wavyRow
+
+        property real animOffset: 0
 
         anchors.centerIn: parent
         spacing: 1 * root.clockScale
 
-        property real animOffset: 0
+        Component.onCompleted: waveAnim.start()
 
         NumberAnimation {
             id: waveAnim
@@ -53,8 +55,6 @@ Item {
             duration: 3000
             loops: Animation.Infinite
         }
-
-        Component.onCompleted: waveAnim.start()
 
         Repeater {
             model: root.chars

@@ -15,18 +15,9 @@ StyledRect {
     required property DrawerVisibilities visibilities
     readonly property real nonAnimHeight: btnLayout.implicitHeight + listOrControls.implicitHeight + layout.spacing + layout.anchors.margins * 2
 
-    Layout.fillWidth: true
-    implicitHeight: layout.implicitHeight + layout.anchors.margins * 2
-
-    radius: Tokens.rounding.large
-    color: Colours.tPalette.m3surfaceContainer
-
     property bool actuallyRecording: Recorder.running
-
     readonly property bool recordingBusy: Recorder.running || Recorder.starting
-
     property string lastError: ""
-
     property string currentVideoMode: Recorder.videoMode || (GlobalConfig.utilities?.recording?.videoMode ?? "fullscreen")
 
     // Computed audio mode based on settings
@@ -75,9 +66,13 @@ StyledRect {
         return qsTr("no audio");
     }
 
-    Connections {
-        target: Recorder
+    Layout.fillWidth: true
+    implicitHeight: layout.implicitHeight + layout.anchors.margins * 2
 
+    radius: Tokens.rounding.large
+    color: Colours.tPalette.m3surfaceContainer
+
+    Connections {
         function onErrorOccurred(errorMsg) {
             root.lastError = errorMsg;
         }
@@ -85,6 +80,8 @@ StyledRect {
         function onRecordingStarted() {
             root.lastError = "";
         }
+
+        target: Recorder
     }
 
     ColumnLayout {

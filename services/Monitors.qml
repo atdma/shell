@@ -9,14 +9,6 @@ Singleton {
 
     property bool identifying: false
 
-    // Auto-dismiss identify overlay after 5 seconds
-    Timer {
-        id: identifyTimer
-
-        interval: 5000
-        onTriggered: root.identifying = false
-    }
-
     function toggleIdentification(): void {
         identifying = !identifying;
         if (identifying)
@@ -137,5 +129,13 @@ Singleton {
         if (!mon)
             return;
         sendKeyword(monitorStr(mon, mon.scale || 1, mon.transform || 0, Math.max(1, refreshRate)));
+    }
+
+    // Auto-dismiss identify overlay after 5 seconds
+    Timer {
+        id: identifyTimer
+
+        interval: 5000
+        onTriggered: root.identifying = false
     }
 }

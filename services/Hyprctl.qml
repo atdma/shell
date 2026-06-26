@@ -23,11 +23,11 @@ Singleton {
         }
     }
 
-    Component.onCompleted: update()
-
     function update(): void {
         proc.running = true;
     }
+
+    Component.onCompleted: update()
 
     Timer {
         interval: 2000

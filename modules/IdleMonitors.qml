@@ -29,8 +29,6 @@ Scope {
     }
 
     Connections {
-        target: SessionManager
-
         function onAboutToSleep() {
             if (GlobalConfig.general.idle.lockBeforeSleep)
                 root.lock.lock.locked = true;
@@ -43,6 +41,8 @@ Scope {
         function onUnlockRequested() {
             root.lock.lock.unlock();
         }
+
+        target: SessionManager
     }
 
     Variants {
