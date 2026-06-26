@@ -14,49 +14,76 @@ PageBase {
     readonly property var mon: nState.selectedMonitor
     readonly property var brightnessMon: mon ? Brightness.getMonitor(mon.name) : null
 
-    onMonChanged: {
-        if (!mon) {
-            nState.closeSubPage();
-        }
-    }
-
-    title: mon?.name ?? qsTr("Monitor")
-    isSubPage: true
-
     readonly property list<MenuItem> refreshItems: [
-        MenuItem { text: "30 Hz" },
-        MenuItem { text: "50 Hz" },
-        MenuItem { text: "59 Hz" },
-        MenuItem { text: "60 Hz" }
+        MenuItem {
+            text: "30 Hz"
+        },
+        MenuItem {
+            text: "50 Hz"
+        },
+        MenuItem {
+            text: "59 Hz"
+        },
+        MenuItem {
+            text: "60 Hz"
+        }
     ]
+
     readonly property list<int> refreshValues: [30, 50, 59, 60]
 
-    function getRefreshItem(): MenuItem {
+    readonly property list<MenuItem> rotationItems: [
+        MenuItem {
+            text: qsTr("0°")
+        },
+        MenuItem {
+            text: "90°"
+        },
+        MenuItem {
+            text: "180°"
+        },
+        MenuItem {
+            text: "270°"
+        }
+    ]
+
+    readonly property list<int> rotationValues: [0, 90, 180, 270]
+
+    readonly property list<MenuItem> scaleItems: [
+        MenuItem {
+            text: "1.0×"
+        },
+        MenuItem {
+            text: "1.25×"
+        },
+        MenuItem {
+            text: "1.5×"
+        },
+        MenuItem {
+            text: "2.0×"
+        }
+    ]
+
+    readonly property list<real> scaleValues: [1.0, 1.25, 1.5, 2.0]
+
+    function getRefreshItem(): var {
         const rate = Math.round(root.mon?.refreshRate ?? 60);
         const idx = root.refreshValues.indexOf(rate);
         return idx >= 0 ? root.refreshItems[idx] : null;
     }
 
-    readonly property list<MenuItem> rotationItems: [
-        MenuItem { text: qsTr("0°") },
-        MenuItem { text: "90°" },
-        MenuItem { text: "180°" },
-        MenuItem { text: "270°" }
-    ]
-    readonly property list<int> rotationValues: [0, 90, 180, 270]
-
-    readonly property list<MenuItem> scaleItems: [
-        MenuItem { text: "1.0×" },
-        MenuItem { text: "1.25×" },
-        MenuItem { text: "1.5×" },
-        MenuItem { text: "2.0×" }
-    ]
-    readonly property list<real> scaleValues: [1.0, 1.25, 1.5, 2.0]
-
-    function getScaleItem(): MenuItem {
+    function getScaleItem(): var {
         const s = root.mon?.scale ?? 1.0;
         const idx = root.scaleValues.findIndex(v => Math.abs(v - s) < 0.01);
         return idx >= 0 ? root.scaleItems[idx] : null;
+    }
+
+    title: mon?.name ?? qsTr("Monitor")
+    isSubPage: true
+
+    onMonChanged: {
+        if (!mon) {
+            nState.closeSubPage();
+        }
     }
 
     ColumnLayout {
@@ -178,12 +205,11 @@ PageBase {
 
         // ── Arrangement ──────────────────────────────────────
         ColumnLayout {
-            Layout.fillWidth: true
-            visible: otherMons.length > 0
-            spacing: Tokens.spacing.extraSmall / 2
+            id: arrangementLayout
 
             readonly property var otherMons: {
-                if (!root.mon || !Hyprctl.monitors) return [];
+                if (!root.mon || !Hyprctl.monitors)
+                    return [];
                 const res = [];
                 for (let i = 0; i < Hyprctl.monitors.length; i++) {
                     if (Hyprctl.monitors[i].id !== root.mon.id)
@@ -191,6 +217,10 @@ PageBase {
                 }
                 return res;
             }
+
+            Layout.fillWidth: true
+            visible: otherMons.length > 0
+            spacing: Tokens.spacing.extraSmall / 2
 
             SectionHeader {
                 text: qsTr("Arrangement")
@@ -207,11 +237,12 @@ PageBase {
 
                     Layout.fillWidth: true
                     first: index === 0
-                    last: index === parent.otherMons.length - 1
+                    last: index === arrangementLayout.otherMons.length - 1
                     implicitHeight: arrangeLayout.implicitHeight + arrangeLayout.anchors.margins * 2
 
                     ColumnLayout {
                         id: arrangeLayout
+
                         anchors.fill: parent
                         anchors.margins: Tokens.padding.medium
                         anchors.leftMargin: Tokens.padding.largeIncreased
@@ -221,6 +252,7 @@ PageBase {
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: Tokens.spacing.small
+
                             MaterialIcon {
                                 text: "tv"
                                 fontStyle: Tokens.font.icon.medium
@@ -241,16 +273,33 @@ PageBase {
 
                             Repeater {
                                 model: [
-                                    { label: qsTr("Left"), pos: "left", icon: "arrow_back" },
-                                    { label: qsTr("Right"), pos: "right", icon: "arrow_forward" },
-                                    { label: qsTr("Above"), pos: "top", icon: "arrow_upward" },
-                                    { label: qsTr("Below"), pos: "bottom", icon: "arrow_downward" }
+                                    {
+                                        label: qsTr("Left"),
+                                        pos: "left",
+                                        icon: "arrow_back"
+                                    },
+                                    {
+                                        label: qsTr("Right"),
+                                        pos: "right",
+                                        icon: "arrow_forward"
+                                    },
+                                    {
+                                        label: qsTr("Above"),
+                                        pos: "top",
+                                        icon: "arrow_upward"
+                                    },
+                                    {
+                                        label: qsTr("Below"),
+                                        pos: "bottom",
+                                        icon: "arrow_downward"
+                                    }
                                 ]
 
                                 delegate: ArrangeButton {
                                     required property var modelData
                                     required property int index
                                     Layout.fillWidth: true
+
                                     btnIcon: modelData.icon
                                     btnLabel: modelData.label
                                     onClicked: {
@@ -306,9 +355,11 @@ PageBase {
 
     component RotationChip: StyledRect {
         id: chip
+
         required property string chipLabel
         required property int chipAngle
         required property bool isActive
+
         signal clicked
 
         implicitHeight: 72
@@ -316,14 +367,16 @@ PageBase {
         color: chip.isActive ? Colours.palette.m3secondaryContainer : Qt.alpha(Colours.palette.m3surfaceVariant, 0.5)
 
         StateLayer {
-            color: chip.isActive ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
             function onClicked(): void {
                 chip.clicked();
             }
+
+            color: chip.isActive ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
         }
 
         ColumnLayout {
             id: chipContent
+
             anchors.centerIn: parent
             spacing: 2
 
@@ -333,6 +386,7 @@ PageBase {
                 rotation: chip.chipAngle
                 fontStyle: Tokens.font.icon.medium
                 color: chip.isActive ? Colours.palette.m3onSecondaryContainer : Colours.palette.m3onSurfaceVariant
+
                 Behavior on rotation {
                     Anim {}
                 }
@@ -353,8 +407,10 @@ PageBase {
 
     component ArrangeButton: StyledRect {
         id: arrangeBtn
+
         required property string btnIcon
         required property string btnLabel
+
         signal clicked
 
         implicitHeight: 64
@@ -362,14 +418,16 @@ PageBase {
         color: Qt.alpha(Colours.palette.m3surfaceVariant, 0.5)
 
         StateLayer {
-            color: Colours.palette.m3onSurfaceVariant
             function onClicked(): void {
                 arrangeBtn.clicked();
             }
+
+            color: Colours.palette.m3onSurfaceVariant
         }
 
         ColumnLayout {
             id: btnContent
+
             anchors.centerIn: parent
             spacing: 2
 

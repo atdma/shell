@@ -1,9 +1,11 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import QtQuick.Layouts
+import Caelestia.Config
 import qs.components
 import qs.components.controls
 import qs.services
-import Caelestia.Config
-import QtQuick
-import QtQuick.Layouts
 
 ColumnLayout {
     id: root
@@ -37,6 +39,7 @@ ColumnLayout {
 
         ColumnLayout {
             id: monitorsLayout
+
             anchors.left: parent.left
             anchors.right: parent.right
             spacing: Tokens.spacing.medium
@@ -46,16 +49,19 @@ ColumnLayout {
 
                 delegate: StyledRect {
                     id: monitorDelegate
+
+                    required property var modelData
+                    readonly property var mon: monitorDelegate.modelData
+                    readonly property var brightnessMon: Brightness.getMonitor(monitorDelegate.mon.name)
+
                     Layout.fillWidth: true
                     implicitHeight: monitorContent.implicitHeight + Tokens.padding.large * 2
                     color: Colours.tPalette.m3surfaceContainerHigh
                     radius: Tokens.rounding.large
 
-                    readonly property var mon: modelData
-                    readonly property var brightnessMon: Brightness.getMonitor(mon.name)
-
                     ColumnLayout {
                         id: monitorContent
+
                         anchors.fill: parent
                         anchors.margins: Tokens.padding.large
                         spacing: Tokens.spacing.medium
@@ -69,6 +75,7 @@ ColumnLayout {
                             ColumnLayout {
                                 Layout.fillWidth: true
                                 spacing: 0
+
                                 StyledText {
                                     text: `${monitorDelegate.mon.name} - ${monitorDelegate.mon.make} ${monitorDelegate.mon.model}`
                                     font: Tokens.font.title.medium
@@ -99,7 +106,8 @@ ColumnLayout {
                             StyledSlider {
                                 Layout.fillWidth: true
                                 value: monitorDelegate.brightnessMon?.brightness ?? 0
-                                onMoved: if (monitorDelegate.brightnessMon) monitorDelegate.brightnessMon.setBrightness(value)
+                                onMoved: if (monitorDelegate.brightnessMon)
+                                    monitorDelegate.brightnessMon.setBrightness(value)
                             }
 
                             StyledText {
@@ -143,6 +151,7 @@ ColumnLayout {
 
                             CustomSpinBox {
                                 id: rrSelector
+
                                 min: 10
                                 max: 1000
                                 step: 1
@@ -163,15 +172,32 @@ ColumnLayout {
 
                             Repeater {
                                 model: [
-                                    { label: "0°", val: 0, icon: "screen_rotation" },
-                                    { label: "90°", val: 1, icon: "screen_rotation" },
-                                    { label: "180°", val: 2, icon: "screen_rotation" },
-                                    { label: "270°", val: 3, icon: "screen_rotation" }
+                                    {
+                                        label: "0°",
+                                        val: 0,
+                                        icon: "screen_rotation"
+                                    },
+                                    {
+                                        label: "90°",
+                                        val: 1,
+                                        icon: "screen_rotation"
+                                    },
+                                    {
+                                        label: "180°",
+                                        val: 2,
+                                        icon: "screen_rotation"
+                                    },
+                                    {
+                                        label: "270°",
+                                        val: 3,
+                                        icon: "screen_rotation"
+                                    }
                                 ]
 
                                 delegate: IconButton {
                                     required property var modelData
                                     required property int index
+
                                     icon: modelData.icon
                                     isToggle: true
                                     checked: monitorDelegate.mon.transform === modelData.val
@@ -192,6 +218,7 @@ ColumnLayout {
 
                             CustomSpinBox {
                                 id: targetMonSelector
+
                                 min: 0
                                 max: Math.max(0, (Hyprctl.monitors.length ?? 1) - 1)
                                 value: 0

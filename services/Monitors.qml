@@ -1,8 +1,8 @@
 pragma Singleton
 
-import qs.services
-import Quickshell
 import QtQuick
+import Quickshell
+import qs.services
 
 Singleton {
     id: root
@@ -12,6 +12,7 @@ Singleton {
     // Auto-dismiss identify overlay after 5 seconds
     Timer {
         id: identifyTimer
+
         interval: 5000
         onTriggered: root.identifying = false
     }
@@ -76,54 +77,65 @@ Singleton {
     function arrange(monitorName: string, pos: string, relativeToId: int): void {
         const target = findMonitorById(relativeToId);
         const moving = findMonitorByName(monitorName);
-        if (!target || !moving) return;
+        if (!target || !moving)
+            return;
 
         let x = target.x;
         let y = target.y;
 
-        const targetW = Math.round(target.width  / (target.scale || 1));
+        const targetW = Math.round(target.width / (target.scale || 1));
         const targetH = Math.round(target.height / (target.scale || 1));
-        const movingW = Math.round(moving.width  / (moving.scale || 1));
+        const movingW = Math.round(moving.width / (moving.scale || 1));
         const movingH = Math.round(moving.height / (moving.scale || 1));
 
-        if      (pos === "left")   x -= movingW;
-        else if (pos === "right")  x += targetW;
-        else if (pos === "top")    y -= movingH;
-        else if (pos === "bottom") y += targetH;
+        if (pos === "left")
+            x -= movingW;
+        else if (pos === "right")
+            x += targetW;
+        else if (pos === "top")
+            y -= movingH;
+        else if (pos === "bottom")
+            y += targetH;
 
         const scale = moving.scale || 1;
         const transform = moving.transform || 0;
         const rr = (moving.refreshRate || 60).toFixed(3);
-        
+
         let s = `${moving.name},${moving.width}x${moving.height}@${rr},${Math.round(x)}x${Math.round(y)},${scale}`;
         if (transform !== 0)
             s += `,transform,${transform}`;
-            
+
         sendKeyword(s);
     }
 
     function rotate(monitorName: string, angle: int): void {
         const mon = findMonitorByName(monitorName);
-        if (!mon) return;
+        if (!mon)
+            return;
 
         let transform = 0;
-        if      (angle === 90)  transform = 1;
-        else if (angle === 180) transform = 2;
-        else if (angle === 270) transform = 3;
+        if (angle === 90)
+            transform = 1;
+        else if (angle === 180)
+            transform = 2;
+        else if (angle === 270)
+            transform = 3;
 
         sendKeyword(monitorStr(mon, mon.scale || 1, transform, mon.refreshRate || 60));
     }
 
     function setScale(monitorName: string, scale: real): void {
         const mon = findMonitorByName(monitorName);
-        if (!mon) return;
+        if (!mon)
+            return;
         const s = Math.max(0.5, Math.min(3.0, scale));
         sendKeyword(monitorStr(mon, s, mon.transform || 0, mon.refreshRate || 60));
     }
 
     function setRefreshRate(monitorName: string, refreshRate: real): void {
         const mon = findMonitorByName(monitorName);
-        if (!mon) return;
+        if (!mon)
+            return;
         sendKeyword(monitorStr(mon, mon.scale || 1, mon.transform || 0, Math.max(1, refreshRate)));
     }
 }

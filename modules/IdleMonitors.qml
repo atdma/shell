@@ -30,12 +30,19 @@ Scope {
 
     Connections {
         target: SessionManager
+
         function onAboutToSleep() {
             if (GlobalConfig.general.idle.lockBeforeSleep)
                 root.lock.lock.locked = true;
         }
-        function onLockRequested() { root.lock.lock.locked = true; }
-        function onUnlockRequested() { root.lock.lock.unlock(); }
+
+        function onLockRequested() {
+            root.lock.lock.locked = true;
+        }
+
+        function onUnlockRequested() {
+            root.lock.lock.unlock();
+        }
     }
 
     Variants {

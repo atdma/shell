@@ -4,8 +4,8 @@ import QtQuick
 import QtQuick.Layouts
 import Caelestia.Config
 import qs.components
-import qs.modules.nexus.common
 import qs.services
+import qs.modules.nexus.common
 
 PageBase {
     id: root
@@ -32,6 +32,8 @@ PageBase {
             model: Hyprctl.monitors
 
             delegate: ConnectedRect {
+                id: monitorItem
+
                 required property var modelData
                 required property int index
 
@@ -42,13 +44,14 @@ PageBase {
 
                 StateLayer {
                     onClicked: {
-                        root.nState.selectedMonitor = modelData;
+                        root.nState.selectedMonitor = monitorItem.modelData;
                         root.nState.openSubPage(1);
                     }
                 }
 
                 RowLayout {
                     id: itemLayout
+
                     anchors.fill: parent
                     anchors.margins: Tokens.padding.medium
                     anchors.leftMargin: Tokens.padding.largeIncreased
@@ -66,7 +69,7 @@ PageBase {
 
                         StyledText {
                             Layout.fillWidth: true
-                            text: modelData.name
+                            text: monitorItem.modelData.name
                             font: Tokens.font.body.small
                             elide: Text.ElideRight
                         }
@@ -74,8 +77,9 @@ PageBase {
                         StyledText {
                             Layout.fillWidth: true
                             text: {
-                                const m = modelData;
-                                if (!m || !m.width || !m.height) return qsTr("Unavailable");
+                                const m = monitorItem.modelData;
+                                if (!m || !m.width || !m.height)
+                                    return qsTr("Unavailable");
                                 const rr = m.refreshRate ?? 0;
                                 return qsTr("%1×%2 @ %3 Hz").arg(m.width).arg(m.height).arg(rr.toFixed(0));
                             }
@@ -86,8 +90,8 @@ PageBase {
                     }
 
                     MaterialIcon {
-                        text: (modelData.focused ?? false) ? "settings" : "chevron_right"
-                        color: (modelData.focused ?? false) ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
+                        text: (monitorItem.modelData.focused ?? false) ? "settings" : "chevron_right"
+                        color: (monitorItem.modelData.focused ?? false) ? Colours.palette.m3primary : Colours.palette.m3onSurfaceVariant
                         fontStyle: Tokens.font.icon.medium
                     }
                 }

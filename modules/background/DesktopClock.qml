@@ -72,6 +72,7 @@ Item {
 
         ColumnLayout {
             id: mainLayout
+
             anchors.centerIn: parent
             spacing: Tokens.spacing.small * root.clockScale
 

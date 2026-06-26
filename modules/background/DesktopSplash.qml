@@ -22,6 +22,7 @@ Item {
 
     Process {
         id: splashProc
+
         command: ["hyprctl", "splash"]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -36,6 +37,7 @@ Item {
 
     Row {
         id: wavyRow
+
         anchors.centerIn: parent
         spacing: 1 * root.clockScale
 
@@ -43,6 +45,7 @@ Item {
 
         NumberAnimation {
             id: waveAnim
+
             target: wavyRow
             property: "animOffset"
             from: 0

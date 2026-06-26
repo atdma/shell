@@ -16,6 +16,7 @@ ColumnLayout {
     required property NexusState nState
     property bool isSubPage
     readonly property int cappedWidth: Math.min(800, width)
+    readonly property alias flickable: flickable
 
     default property Item contentChild
 

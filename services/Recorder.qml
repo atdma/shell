@@ -17,8 +17,8 @@ Singleton {
     readonly property int maxStartChecks: 30
 
     signal errorOccurred(string errorMsg)
-    signal recordingStarted()
-    signal recordingStopped()
+    signal recordingStarted
+    signal recordingStopped
 
     function start(videoMode: string, audioMode: string): bool {
         if (props.running || props.starting) {
@@ -113,6 +113,25 @@ Singleton {
         return props.running;
     }
 
+    // Initialize on component completion
+    Component.onCompleted: {
+        console.log("Recorder service initialized");
+        // Check initial state
+        initialStatusProc.running = true;
+    }
+
+    // Cleanup on destruction
+    Component.onDestruction: {
+        if (props.running) {
+            console.log("Service destroyed while recording - stopping recording");
+            try {
+                Quickshell.execDetached(["caelestia", "record", "--stop"]);
+            } catch (error) {
+                console.error("Failed to stop recording on cleanup:", error);
+            }
+        }
+    }
+
     PersistentProperties {
         id: props
 
@@ -133,7 +152,7 @@ Singleton {
         running: false
         command: ["pidof", "gpu-screen-recorder"]
 
-        onExited: (code, exitStatus) => {
+        onExited: code => { // qmllint disable signal-handler-parameters
             const wasRunning = props.running;
             const isRunning = code === 0;
 
@@ -157,6 +176,7 @@ Singleton {
     // Verification timer after start
     Timer {
         id: verifyTimer
+
         interval: 1000
         repeat: false
         onTriggered: {
@@ -168,6 +188,7 @@ Singleton {
     // Verification timer after stop
     Timer {
         id: stopVerifyTimer
+
         interval: 500
         repeat: false
         onTriggered: {
@@ -183,7 +204,7 @@ Singleton {
         running: false
         command: ["pidof", "gpu-screen-recorder"]
 
-        onExited: (code, exitStatus) => {
+        onExited: code => { // qmllint disable signal-handler-parameters
             const isRunning = code === 0;
 
             if (isRunning && props.starting) {
@@ -223,7 +244,7 @@ Singleton {
         running: false
         command: ["pidof", "gpu-screen-recorder"]
 
-        onExited: (code, exitStatus) => {
+        onExited: code => { // qmllint disable signal-handler-parameters
             const isRunning = code === 0;
 
             if (!isRunning) {
@@ -244,6 +265,7 @@ Singleton {
     // Elapsed time tracker
     Timer {
         id: elapsedTimer
+
         interval: 1000
         repeat: true
         running: props.running && !props.paused
@@ -256,6 +278,7 @@ Singleton {
     // Periodic status check while recording
     Timer {
         id: statusCheckTimer
+
         interval: 3000
         repeat: false
 
@@ -266,13 +289,6 @@ Singleton {
         }
     }
 
-    // Initialize on component completion
-    Component.onCompleted: {
-        console.log("Recorder service initialized");
-        // Check initial state
-        initialStatusProc.running = true;
-    }
-
     // Initial status check
     Process {
         id: initialStatusProc
@@ -280,7 +296,7 @@ Singleton {
         running: false
         command: ["pidof", "gpu-screen-recorder"]
 
-        onExited: (code, exitStatus) => {
+        onExited: code => { // qmllint disable signal-handler-parameters
             if (code === 0) {
                 console.log("Found existing recording process");
                 props.starting = false;
@@ -292,18 +308,6 @@ Singleton {
                 props.running = false;
                 props.paused = false;
                 props.elapsed = 0;
-            }
-        }
-    }
-
-    // Cleanup on destruction
-    Component.onDestruction: {
-        if (props.running) {
-            console.log("Service destroyed while recording - stopping recording");
-            try {
-                Quickshell.execDetached(["caelestia", "record", "--stop"]);
-            } catch (error) {
-                console.error("Failed to stop recording on cleanup:", error);
             }
         }
     }

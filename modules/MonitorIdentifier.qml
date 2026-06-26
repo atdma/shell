@@ -1,18 +1,19 @@
 pragma ComponentBehavior: Bound
 
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+import Quickshell.Wayland
+import Caelestia.Config
 import qs.components
 import qs.components.containers
 import qs.services
-import Caelestia.Config
-import Quickshell
-import Quickshell.Wayland
-import QtQuick
-import QtQuick.Layouts
 
 Variants {
     id: root
 
     model: Quickshell.screens
+
     readonly property bool active: Monitors.identifying
 
     StyledWindow {
@@ -41,6 +42,7 @@ Variants {
 
         StyledRect {
             id: identifierRect
+
             anchors.centerIn: parent
             implicitWidth: Tokens.padding.large * 14
             implicitHeight: Tokens.padding.large * 14
@@ -72,8 +74,6 @@ Variants {
                     font: Tokens.font.body.medium
                     color: Colours.palette.m3onSurfaceVariant
                 }
-
-
             }
 
             Behavior on opacity {

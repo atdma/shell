@@ -14,6 +14,8 @@ QtObject {
     property DesktopEntry selectedApp
     property string selectedEthernetInterface
     property var selectedMonitor
+    property var selectedNetwork
+    property bool animatingContainer
 
     signal close
     signal subPageOpened(idx: int)

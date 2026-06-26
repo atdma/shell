@@ -9,10 +9,10 @@ import qs.modules.nexus.common
 import qs.modules.nexus.pages
 import qs.modules.nexus.pages.audio
 import qs.modules.nexus.pages.bluetooth
+import qs.modules.nexus.pages.monitors
 import qs.modules.nexus.pages.network
 import qs.modules.nexus.pages.panels
 import qs.modules.nexus.pages.wallandstyle
-import qs.modules.nexus.pages.monitors
 import qs.modules.nexus.pages.panels.taskbar
 
 QtObject {

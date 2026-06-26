@@ -22,8 +22,11 @@ StyledRect {
     color: Colours.tPalette.m3surfaceContainer
 
     property bool actuallyRecording: Recorder.running
+
     readonly property bool recordingBusy: Recorder.running || Recorder.starting
+
     property string lastError: ""
+
     property string currentVideoMode: Recorder.videoMode || (GlobalConfig.utilities?.recording?.videoMode ?? "fullscreen")
 
     // Computed audio mode based on settings
@@ -74,9 +77,11 @@ StyledRect {
 
     Connections {
         target: Recorder
+
         function onErrorOccurred(errorMsg) {
             root.lastError = errorMsg;
         }
+
         function onRecordingStarted() {
             root.lastError = "";
         }
@@ -189,6 +194,7 @@ StyledRect {
         StyledRect {
             id: errorBanner
             Layout.fillWidth: true
+
             visible: root.lastError !== ""
             implicitHeight: visible ? errorText.implicitHeight + Tokens.padding.medium * 2 : 0
             radius: Tokens.rounding.small
@@ -196,6 +202,7 @@ StyledRect {
 
             StyledText {
                 id: errorText
+
                 anchors.fill: parent
                 anchors.margins: Tokens.padding.medium
                 text: root.lastError
@@ -282,6 +289,7 @@ StyledRect {
                         StyledSlider {
                             id: systemVolumeSlider
                             Layout.fillWidth: true
+
                             implicitHeight: 24
                             opacity: (GlobalConfig.utilities?.recording?.recordSystem ?? true) ? 1.0 : 0.5
                             from: 0
@@ -333,6 +341,7 @@ StyledRect {
                         StyledSlider {
                             id: micVolumeSlider
                             Layout.fillWidth: true
+
                             implicitHeight: 24
                             opacity: (GlobalConfig.utilities?.recording?.recordMicrophone ?? false) ? 1.0 : 0.5
                             from: 0
@@ -393,7 +402,9 @@ StyledRect {
 
             Behavior on Layout.preferredHeight {
                 id: locHeightAnim
+
                 enabled: false
+
                 Anim {}
             }
 
@@ -436,6 +447,7 @@ StyledRect {
 
     Component {
         id: recordingList
+
         RecordingList {
             props: root.props
             visibilities: root.visibilities
@@ -444,6 +456,7 @@ StyledRect {
 
     Component {
         id: recordingControls
+
         RowLayout {
             spacing: Tokens.spacing.medium
 
@@ -456,6 +469,7 @@ StyledRect {
 
                 StyledText {
                     id: recText
+
                     anchors.centerIn: parent
                     animate: true
                     text: Recorder.paused ? "PAUSED" : "REC"
@@ -471,6 +485,7 @@ StyledRect {
                     running: !Recorder.starting && !Recorder.paused && root.actuallyRecording
                     alwaysRunToEnd: true
                     loops: Animation.Infinite
+
                     Anim {
                         from: 1
                         to: 0
