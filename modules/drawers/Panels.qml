@@ -22,7 +22,7 @@ Item {
     required property real borderThickness
 
     readonly property alias osd: osd
-    readonly property alias osdWrapper: osdWrappera
+    readonly property alias osdWrapper: osdWrapper
     readonly property alias notifications: notifications
     readonly property alias session: session
     readonly property alias sessionWrapper: sessionWrapper
